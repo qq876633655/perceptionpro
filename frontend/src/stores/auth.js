@@ -14,6 +14,12 @@ export const useAuthStore = defineStore('auth', {
   getters: {
     isLoggedIn: (state) => !!state.token,
 
+    /** 是否为管理员（is_staff） */
+    isStaff: (state) => !!state.userInfo?.is_staff,
+
+    /** 是否为超级管理员（is_superuser） */
+    isSuperUser: (state) => !!state.userInfo?.is_superuser,
+
     /** 当前用户角色列表，如 ['admin', 'developer'] */
     roles: (state) => state.userInfo?.roles ?? [],
 

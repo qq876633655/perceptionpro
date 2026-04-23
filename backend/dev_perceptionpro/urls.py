@@ -47,6 +47,7 @@ urlpatterns = [
     # 应用
     path('api/', include('apps.back_stage.urls')),
     path('api/', include('apps.version_pack.urls')),
+    path('api/', include('apps.data_manage.urls')),
 
     # 认证
     path('api/token/', TokenObtainPairView.as_view()),

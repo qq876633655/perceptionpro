@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     # 个人
     'apps.back_stage.apps.BackStageConfig',
     'apps.version_pack.apps.VersionPackConfig',
+    'apps.data_manage.apps.DataManageConfig',
 ]
 
 # REST_FRAMEWORK = {
@@ -73,9 +74,11 @@ REST_FRAMEWORK = {
     ),
 
     # 过滤
-    'DEFAULT_FILTER_BACKENDS': (
+    'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
-    ),
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
 
     # 分页
     'DEFAULT_PAGINATION_CLASS': 'apps.common_views.response.CustomPagination',

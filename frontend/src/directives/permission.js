@@ -14,7 +14,7 @@ export const permissionDirective = {
     const authStore = useAuthStore()
     const required = binding.value
 
-    const check = (perm) => authStore.hasPermission(perm) || authStore.hasRole('admin')
+    const check = (perm) => authStore.isSuperUser || authStore.hasPermission(perm)
 
     const allowed = Array.isArray(required)
       ? required.some(check)  // 有其中一个即可

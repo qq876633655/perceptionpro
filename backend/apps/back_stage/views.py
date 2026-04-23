@@ -1,17 +1,19 @@
 from django.contrib.auth import authenticate
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import User
-from .serializers import UserSerializer, UserMeSerializer
+from .serializers import UserSerializer, UserMeSerializer, GroupSerializer
 from .filters import UserFilter
-# from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
-from .permissions import IsAdminRole
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.viewsets import ModelViewSet
+from .permissions import IsSuperUser, CanModifyUser
 from apps.common_views.response import APIResponse
 from apps.common_views.views import BaseModelViewSet
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
+from rest_framework.decorators import action
+from django.contrib.auth.models import Group, Permission
 
 
 class UserViewSet(BaseModelViewSet):
@@ -28,9 +30,50 @@ class UserViewSet(BaseModelViewSet):
             return [IsAuthenticated()]
 
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsAdminRole()]
+            return [CanModifyUser()]
 
         return [IsAuthenticated()]
+
+    def perform_destroy(self, instance):
+        # 显式清理 M2M 关联，避免 MySQL 外键约束与 ORM collector 顺序冲突
+        instance.groups.clear()
+        instance.user_permissions.clear()
+        instance.delete()
+
+
+# 只暴露业务 app 的权限，过滤掉 Django 内置 app
+BUSINESS_APPS = {'back_stage', 'version_pack', 'common_views', 'data_manage'}
+
+
+class GroupViewSet(ModelViewSet):
+    """角色（权限组）管理"""
+    queryset = Group.objects.all().order_by('id')
+    serializer_class = GroupSerializer
+
+    def get_permissions(self):
+        # list/retrieve：is_staff 或以上可查看（供用户管理弹窗加载角色选项）
+        # create/update/destroy：仅超级管理员
+        if self.action in ['list', 'retrieve']:
+            return [CanModifyUser()]
+        return [IsSuperUser()]
+
+    @action(methods=['get'], detail=False, permission_classes=[IsAuthenticated])
+    def all_permissions(self, request):
+        """返回业务相关权限，用于前端选择器"""
+        perms = Permission.objects.select_related('content_type').filter(
+            content_type__app_label__in=BUSINESS_APPS
+        ).order_by('content_type__app_label', 'codename')
+        data = [
+            {
+                'id': p.id,
+                'name': p.name,
+                'codename': p.codename,
+                'app_label': p.content_type.app_label,
+            }
+            for p in perms
+        ]
+        return Response(data)
+
 
 
 class MeView(APIView):
@@ -57,7 +100,7 @@ class LoginView(APIView):
             return APIResponse(msg="手机号或密码错误", code=1002, status=status.HTTP_400_BAD_REQUEST)
 
         if not user.is_active:
-            return APIResponse(msg="用户已禁用", code=1003, status=status.HTTP_403_FORBIDDEN)
+            return APIResponse(msg="用户已被禁用", code=1003, status=status.HTTP_400_BAD_REQUEST)
 
         refresh = RefreshToken.for_user(user)
 

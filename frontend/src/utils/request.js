@@ -35,6 +35,10 @@ service.interceptors.request.use(
 // ── 响应拦截器：统一处理后端返回格式 + 自动刷新 token ───────────────
 service.interceptors.response.use(
   (response) => {
+    // 204 No Content（DELETE 成功无返回体）
+    if (response.status === 204) {
+      return { code: 0, msg: 'success', data: null }
+    }
     const res = response.data
     // 后端统一格式：{ code, msg, data }
     if (res.code !== 0) {
@@ -87,7 +91,7 @@ service.interceptors.response.use(
 
     // ── 其他错误 ──────────────────────────────────────────────────
     if (status === 403) {
-      ElMessage.error('权限不足')
+      ElMessage.error(error.response?.data?.msg || '权限不足')
     } else if (status === 500) {
       ElMessage.error('服务器错误，请稍后重试')
     } else if (status !== 401) {

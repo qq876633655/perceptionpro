@@ -23,15 +23,90 @@ const routes = [
         meta: { title: '仪表盘', icon: 'HomeFilled' },
       },
       {
-        path: 'versions',
-        name: 'Versions',
-        component: () => import('@/views/version/VersionList.vue'),
-        meta: {
-          title: '版本管理',
-          icon: 'Document',
-          // 需要以下任一权限
-          permissions: ['version:view'],
-        },
+        path: 'versions/perception',
+        name: 'PerceptionVersions',
+        component: () => import('@/views/versions/perception/PerceptionVersionList.vue'),
+        meta: { title: '感知版本', parentTitle: '版本管理', parentPath: '/versions/perception' },
+      },
+      {
+        path: 'envs/perception',
+        name: 'PerceptionEnvs',
+        component: () => import('@/views/versions/perception/PerceptionEnvList.vue'),
+        meta: { title: '感知环境', parentTitle: '版本管理', parentPath: '/versions/perception' },
+      },
+      {
+        path: 'versions/loc',
+        name: 'LocVersions',
+        component: () => import('@/views/versions/loc/LocVersionList.vue'),
+        meta: { title: '定位版本', parentTitle: '版本管理', parentPath: '/versions/loc' },
+      },
+      {
+        path: 'envs/loc',
+        name: 'LocEnvs',
+        component: () => import('@/views/versions/loc/LocEnvList.vue'),
+        meta: { title: '定位环境', parentTitle: '版本管理', parentPath: '/versions/loc' },
+      },
+      {
+        path: 'versions/ctl',
+        name: 'CtlVersions',
+        component: () => import('@/views/versions/ctl/CtlVersionList.vue'),
+        meta: { title: '控制版本', parentTitle: '版本管理', parentPath: '/versions/ctl' },
+      },
+      {
+        path: 'envs/ctl',
+        name: 'CtlEnvs',
+        component: () => import('@/views/versions/ctl/CtlEnvList.vue'),
+        meta: { title: '控制环境', parentTitle: '版本管理', parentPath: '/versions/ctl' },
+      },
+      {
+        path: 'versions/sim',
+        name: 'SimVersions',
+        component: () => import('@/views/versions/sim/SimVersionList.vue'),
+        meta: { title: '仿真版本', parentTitle: '版本管理', parentPath: '/versions/sim' },
+      },
+      {
+        path: 'envs/sim',
+        name: 'SimEnvs',
+        component: () => import('@/views/versions/sim/SimEnvList.vue'),
+        meta: { title: '仿真环境', parentTitle: '版本管理', parentPath: '/versions/sim' },
+      },
+      {
+        path: 'versions/sen',
+        name: 'SenVersions',
+        component: () => import('@/views/versions/sen/SenVersionList.vue'),
+        meta: { title: '传感器版本', parentTitle: '版本管理', parentPath: '/versions/sen' },
+      },
+      {
+        path: 'envs/sen',
+        name: 'SenEnvs',
+        component: () => import('@/views/versions/sen/SenEnvList.vue'),
+        meta: { title: '传感器环境', parentTitle: '版本管理', parentPath: '/versions/sen' },
+      },
+      // ── 系统管理（仅 is_staff 可访） ───────────────────────
+      {
+        path: 'system/users',
+        name: 'UserManagement',
+        component: () => import('@/views/system/UserManagement.vue'),
+        meta: { title: '用户管理', parentTitle: '系统管理', requireStaff: true },
+      },
+      {
+        path: 'system/roles',
+        name: 'RoleManagement',
+        component: () => import('@/views/system/RoleManagement.vue'),
+        meta: { title: '角色管理', parentTitle: '系统管理', requireStaff: true },
+      },
+      // ── 数据管理 ────────────────────────────────────────────────
+      {
+        path: 'data/sim_project_property',
+        name: 'SimProjectProperty',
+        component: () => import('@/views/data_manage/sim_project_property/SimProjectPropertyList.vue'),
+        meta: { title: '仿真项目数据', parentTitle: '数据管理', parentPath: '/data/sim_project_property' },
+      },
+      {
+        path: 'data/sim_common_property',
+        name: 'SimCommonProperty',
+        component: () => import('@/views/data_manage/sim_common_property/SimCommonPropertyList.vue'),
+        meta: { title: '仿真通用数据', parentTitle: '数据管理', parentPath: '/data/sim_common_property' },
       },
     ],
   },
@@ -77,8 +152,13 @@ router.beforeEach(async (to, from, next) => {
   if (requiredPermissions?.length) {
     const hasAll = requiredPermissions.every((p) => authStore.hasPermission(p))
     if (!hasAll) {
-      return next('/') // 权限不足，跳回首页（可换 403 页面）
+      return next('/')
     }
+  }
+
+  // is_staff 页面限制
+  if (to.meta.requireStaff && !authStore.userInfo?.is_staff) {
+    return next('/dashboard')
   }
 
   next()

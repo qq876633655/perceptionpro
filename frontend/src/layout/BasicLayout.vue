@@ -21,10 +21,35 @@
           <template #title>仪表盘</template>
         </el-menu-item>
 
-        <el-menu-item index="/versions">
-          <el-icon><Document /></el-icon>
-          <template #title>版本管理</template>
-        </el-menu-item>
+        <el-sub-menu index="/versions">
+          <template #title>
+            <el-icon><Document /></el-icon>
+            <span>版本管理</span>
+          </template>
+          <el-menu-item index="/versions/perception">感知版本</el-menu-item>
+          <el-menu-item index="/versions/loc">定位版本</el-menu-item>
+          <el-menu-item index="/versions/ctl">控制版本</el-menu-item>
+          <el-menu-item index="/versions/sim">仿真版本</el-menu-item>
+          <el-menu-item index="/versions/sen">传感器版本</el-menu-item>
+        </el-sub-menu>
+
+        <el-sub-menu v-if="authStore.userInfo?.is_staff" index="/system">
+          <template #title>
+            <el-icon><Setting /></el-icon>
+            <span>系统管理</span>
+          </template>
+          <el-menu-item index="/system/users">用户管理</el-menu-item>
+          <el-menu-item index="/system/roles">角色管理</el-menu-item>
+        </el-sub-menu>
+
+        <el-sub-menu index="/data">
+          <template #title>
+            <el-icon><Folder /></el-icon>
+            <span>数据管理</span>
+          </template>
+          <el-menu-item index="/data/sim_project_property">仿真项目数据</el-menu-item>
+          <el-menu-item index="/data/sim_common_property">仿真通用数据</el-menu-item>
+        </el-sub-menu>
       </el-menu>
     </el-aside>
 
@@ -39,6 +64,9 @@
           <!-- 面包屑 -->
           <el-breadcrumb separator="/">
             <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item v-if="parentTitle" :to="{ path: parentPath }">{{
+              parentTitle
+            }}</el-breadcrumb-item>
             <el-breadcrumb-item v-if="currentTitle">{{ currentTitle }}</el-breadcrumb-item>
           </el-breadcrumb>
         </div>
@@ -70,6 +98,8 @@
       </el-main>
     </el-container>
   </el-container>
+
+  <ChangePasswordDialog v-model:visible="changePwdVisible" />
 </template>
 
 <script setup>
@@ -77,15 +107,19 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
+import ChangePasswordDialog from '@/components/ChangePasswordDialog.vue'
 
 const authStore = useAuthStore()
 const route = useRoute()
 const router = useRouter()
 
 const isCollapsed = ref(false)
+const changePwdVisible = ref(false)
 
 const activeMenu = computed(() => route.path)
 const currentTitle = computed(() => route.meta?.title)
+const parentTitle = computed(() => route.meta?.parentTitle)
+const parentPath = computed(() => route.meta?.parentPath)
 
 async function handleCommand(command) {
   if (command === 'logout') {
@@ -98,7 +132,7 @@ async function handleCommand(command) {
     ElMessage.success('已退出登录')
     router.push('/login')
   } else if (command === 'changePassword') {
-    router.push('/change-password')
+    changePwdVisible.value = true
   }
 }
 </script>

@@ -102,6 +102,10 @@ class CustomJSONRenderer(JSONRenderer):
         if hasattr(response, 'streaming_content'):
             return super().render(data, accepted_media_type, renderer_context)
 
+        # ✅ 204 No Content 必须返回空 body（HTTP 规范）
+        if response and response.status_code == 204:
+            return b''
+
         if isinstance(data, dict) and "code" in data:
             return super().render(data, accepted_media_type, renderer_context)
 

@@ -2,7 +2,7 @@
   <el-dialog
     v-model="visible"
     :title="isEdit ? '编辑版本' : '新建版本'"
-    width="600px"
+    width="620px"
     :close-on-click-modal="false"
     @closed="handleClosed"
   >
@@ -23,19 +23,13 @@
       </el-form-item>
 
       <el-form-item label="版本类型" prop="versions_type" :error="serverErrors.versions_type">
-        <el-select
-          v-model="form.versions_type"
-          placeholder="请选择版本类型"
-          style="width: 100%"
-          multiple
-          allow-create
-          filterable
-        >
-          <el-option label="功能版本" value="功能版本" />
-          <el-option label="修复版本" value="修复版本" />
-          <el-option label="性能版本" value="性能版本" />
-          <el-option label="安全版本" value="安全版本" />
-        </el-select>
+        <el-checkbox-group v-model="form.versions_type">
+          <el-checkbox value="feature">feature</el-checkbox>
+          <el-checkbox value="dev">dev</el-checkbox>
+          <el-checkbox value="test">test</el-checkbox>
+          <el-checkbox value="hotfix">hotfix</el-checkbox>
+          <el-checkbox value="release">release</el-checkbox>
+        </el-checkbox-group>
       </el-form-item>
 
       <el-form-item label="适用专项" prop="apply_project" :error="serverErrors.apply_project">
@@ -79,7 +73,8 @@
             <el-option label="未开始" value="未开始" />
             <el-option label="测试中" value="测试中" />
             <el-option label="通过" value="通过" />
-            <el-option label="不通过" value="不通过" />
+            <el-option label="失败" value="失败" />
+            <el-option label="中断" value="中断" />
           </el-select>
         </el-form-item>
 
@@ -92,6 +87,33 @@
           />
         </el-form-item>
       </template>
+
+      <!-- 版本文件：编辑时只读，创建时必填（放最下方） -->
+      <el-form-item v-if="isEdit" label="版本文件">
+        <el-input
+          :model-value="props.editData?.version_file ? '已上传（版本文件创建后不可修改）' : '未上传（版本文件创建后不可修改）'"
+          disabled
+        />
+      </el-form-item>
+      <el-form-item v-else label="版本文件" prop="version_file" :error="serverErrors.version_file">
+        <FileUploader
+          ref="versionFileRef"
+          tip="请上传版本文件，大小不超过 500MB"
+          @change="handleVersionFileChange"
+        />
+      </el-form-item>
+
+      <!-- 数据库文件：两种模式均可上传（可选，放最下方） -->
+      <el-form-item label="数据库文件" :error="serverErrors.database_file">
+        <FileUploader
+          ref="dbFileRef"
+          tip="支持 .db 格式，可选上传，大小不超过 200MB"
+          @change="handleDbFileChange"
+        />
+        <div v-if="isEdit && props.editData?.database_file" class="file-hint">
+          当前已有数据库文件，上传后将覆盖
+        </div>
+      </el-form-item>
     </el-form>
 
     <template #footer>
@@ -108,6 +130,7 @@ import { ref, reactive, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { createVersion, updateVersion, getEnvList } from '@/api/version'
 import { useFormErrors } from '@/composables/useFormErrors'
+import FileUploader from '@/components/FileUploader.vue'
 
 const props = defineProps({
   visible: Boolean,
@@ -129,7 +152,11 @@ const isEdit = computed(() => !!props.editData)
 
 // ── 表单 ────────────────────────────────────────────────────────────
 const formRef = ref(null)
+const versionFileRef = ref(null)
+const dbFileRef = ref(null)
 const submitting = ref(false)
+const selectedVersionFile = ref(null)
+const selectedDbFile = ref(null)
 const { serverErrors, applyServerErrors, clearServerErrors } = useFormErrors()
 
 const form = reactive({
@@ -140,11 +167,44 @@ const form = reactive({
   dev_test_result: '',
   test_result: '未开始',
   test_verdict: '',
+  version_file: null, // 仅用于校验触发
 })
 
 const rules = {
-  version_num: [{ required: true, message: '请输入版本号', trigger: 'blur' }],
-  versions_type: [{ required: true, message: '请选择版本类型', trigger: 'change' }],
+  version_num: [
+    { required: true, message: '请输入版本号', trigger: 'blur' },
+    {
+      pattern: /^[a-zA-Z0-9._\-]+$/,
+      message: '版本号仅支持字母、数字、点(.)、横线(-)、下划线(_)，不能包含中文或特殊字符',
+      trigger: 'blur',
+    },
+  ],
+  versions_type: [{ required: true, message: '请至少选择一种版本类型', trigger: 'change' }],
+  apply_project: [{ required: true, message: '请输入适用专项', trigger: 'blur' }],
+  env: [{ required: true, message: '请选择关联环境', trigger: 'change' }],
+  version_file: [
+    {
+      required: true,
+      validator: (rule, value, callback) => {
+        if (!isEdit.value && !selectedVersionFile.value) {
+          callback(new Error('请上传版本文件'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'change',
+    },
+  ],
+}
+
+function handleVersionFileChange(file) {
+  selectedVersionFile.value = file
+  form.version_file = file ? file.name : null
+  formRef.value?.validateField('version_file')
+}
+
+function handleDbFileChange(file) {
+  selectedDbFile.value = file
 }
 
 // 打开弹窗时回填数据
@@ -153,6 +213,8 @@ watch(
   (val) => {
     if (val) {
       clearServerErrors()
+      selectedVersionFile.value = null
+      selectedDbFile.value = null
       if (props.editData) {
         Object.assign(form, {
           version_num: props.editData.version_num,
@@ -162,6 +224,13 @@ watch(
           dev_test_result: props.editData.dev_test_result ?? '',
           test_result: props.editData.test_result ?? '未开始',
           test_verdict: props.editData.test_verdict ?? '',
+          version_file: props.editData.version_file ?? null,
+        })
+      } else {
+        Object.assign(form, {
+          version_num: '', versions_type: [], apply_project: '主线版本',
+          env: null, dev_test_result: '', test_result: '未开始',
+          test_verdict: '', version_file: null,
         })
       }
       loadEnvOptions()
@@ -180,7 +249,7 @@ async function loadEnvOptions() {
   }
 }
 
-// ── 提交 ────────────────────────────────────────────────────────────
+// ── 提交 ────────────────────────────────────────────────────
 async function handleSubmit() {
   const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
@@ -188,32 +257,52 @@ async function handleSubmit() {
   submitting.value = true
   clearServerErrors()
   try {
-    const payload = {
-      versions_type: form.versions_type,
-      apply_project: form.apply_project,
-      env: form.env,
-      dev_test_result: form.dev_test_result,
-    }
-    if (isEdit.value) {
-      payload.test_result = form.test_result
-      payload.test_verdict = form.test_verdict
-    } else {
-      payload.version_num = form.version_num
-    }
-
-    if (isEdit.value) {
-      await updateVersion(props.editData.id, payload)
+    if (!isEdit.value) {
+      // 新建：必有 version_file，用 FormData
+      const fd = new FormData()
+      fd.append('version_num', form.version_num)
+      fd.append('versions_type', JSON.stringify(form.versions_type))
+      fd.append('apply_project', form.apply_project)
+      if (form.env != null) fd.append('env', form.env)
+      if (form.dev_test_result) fd.append('dev_test_result', form.dev_test_result)
+      fd.append('version_file', selectedVersionFile.value)
+      if (selectedDbFile.value) fd.append('database_file', selectedDbFile.value)
+      await createVersion(fd)
+      ElMessage.success('版本创建成功')
+    } else if (selectedDbFile.value) {
+      // 编辑且有文件替换：用 FormData
+      const fd = new FormData()
+      fd.append('versions_type', JSON.stringify(form.versions_type))
+      fd.append('apply_project', form.apply_project)
+      if (form.env != null) fd.append('env', form.env)
+      if (form.dev_test_result) fd.append('dev_test_result', form.dev_test_result)
+      fd.append('test_result', form.test_result)
+      fd.append('test_verdict', form.test_verdict ?? '')
+      fd.append('database_file', selectedDbFile.value)
+      await updateVersion(props.editData.id, fd)
       ElMessage.success('版本修改成功')
     } else {
-      await createVersion(payload)
-      ElMessage.success('版本创建成功')
+      // 编辑且无文件：用 JSON
+      await updateVersion(props.editData.id, {
+        versions_type: form.versions_type,
+        apply_project: form.apply_project,
+        env: form.env,
+        dev_test_result: form.dev_test_result,
+        test_result: form.test_result,
+        test_verdict: form.test_verdict ?? '',
+      })
+      ElMessage.success('版本修改成功')
     }
     emit('success')
     visible.value = false
   } catch (err) {
-    // 后端字段校验错误回填
-    if (Array.isArray(err?.data)) {
-      applyServerErrors(err.data)
+    if (err?.data && typeof err.data === 'object') {
+      applyServerErrors(
+        Object.entries(err.data).map(([field, msgs]) => ({
+          field,
+          message: Array.isArray(msgs) ? msgs[0] : msgs,
+        })),
+      )
     }
   } finally {
     submitting.value = false
@@ -223,15 +312,18 @@ async function handleSubmit() {
 // ── 关闭时重置 ────────────────────────────────────────────────────────
 function handleClosed() {
   formRef.value?.resetFields()
-  Object.assign(form, {
-    version_num: '',
-    versions_type: [],
-    apply_project: '主线版本',
-    env: null,
-    dev_test_result: '',
-    test_result: '未开始',
-    test_verdict: '',
-  })
+  versionFileRef.value?.reset()
+  dbFileRef.value?.reset()
+  selectedVersionFile.value = null
+  selectedDbFile.value = null
   clearServerErrors()
 }
 </script>
+
+<style scoped>
+.file-hint {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+}
+</style>

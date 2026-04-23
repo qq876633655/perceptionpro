@@ -15,6 +15,11 @@ export function getVersionList(params) {
   return request({ url: '/per_version/', method: 'get', params })
 }
 
+/** 获取创建过版本的用户列表（用于筛选下拉） */
+export function getVersionCreators() {
+  return request({ url: '/per_version/creators/', method: 'get' })
+}
+
 /** 版本详情 */
 export function getVersion(id) {
   return request({ url: `/per_version/${id}/`, method: 'get' })
@@ -122,6 +127,23 @@ export function deleteEnv(id) {
 }
 
 /**
+ * 批量删除环境
+ * @param {number[]} ids
+ */
+export function batchDeleteEnvs(ids) {
+  return request({
+    url: '/per_env/batch_delete/',
+    method: 'post',
+    data: { ids },
+  })
+}
+
+/** 获取创建过环境的用户列表（用于筛选下拉） */
+export function getEnvCreators() {
+  return request({ url: '/per_env/creators/', method: 'get' })
+}
+
+/**
  * 上传环境文件 env_file（multipart/form-data）
  * @param {number} id - PerEnv ID
  * @param {FormData} formData  - 含字段 env_file
@@ -140,3 +162,30 @@ export function uploadEnvFile(id, formData, onProgress) {
     },
   })
 }
+
+// ════════════════════════════════════════════════════════════════════
+// 通用模块 API 工厂（loc / ctl / sim / sen 共用）
+// ════════════════════════════════════════════════════════════════════
+
+function makeModuleApi(prefix) {
+  return {
+    getVersionList:      (params)    => request({ url: `/${prefix}_version/`, method: 'get', params }),
+    getVersionCreators:  ()          => request({ url: `/${prefix}_version/creators/`, method: 'get' }),
+    createVersion:       (data)      => request({ url: `/${prefix}_version/`, method: 'post', data }),
+    updateVersion:       (id, data)  => request({ url: `/${prefix}_version/${id}/`, method: 'patch', data }),
+    deleteVersion:       (id)        => request({ url: `/${prefix}_version/${id}/`, method: 'delete' }),
+    batchDeleteVersions: (ids)       => request({ url: `/${prefix}_version/batch_delete/`, method: 'post', data: { ids } }),
+
+    getEnvList:          (params)    => request({ url: `/${prefix}_env/`, method: 'get', params }),
+    getEnvCreators:      ()          => request({ url: `/${prefix}_env/creators/`, method: 'get' }),
+    createEnv:           (data)      => request({ url: `/${prefix}_env/`, method: 'post', data }),
+    updateEnv:           (id, data)  => request({ url: `/${prefix}_env/${id}/`, method: 'patch', data }),
+    deleteEnv:           (id)        => request({ url: `/${prefix}_env/${id}/`, method: 'delete' }),
+    batchDeleteEnvs:     (ids)       => request({ url: `/${prefix}_env/batch_delete/`, method: 'post', data: { ids } }),
+  }
+}
+
+export const locApi = makeModuleApi('loc')
+export const ctlApi = makeModuleApi('ctl')
+export const simApi = makeModuleApi('sim')
+export const senApi = makeModuleApi('sen')
