@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 // 路由白名单（无需登录）
-const WHITE_LIST = ['/login']
+const WHITE_LIST = ['/login', '/dd-callback']
 
 const routes = [
   {
@@ -108,11 +108,81 @@ const routes = [
         component: () => import('@/views/data_manage/sim_common_property/SimCommonPropertyList.vue'),
         meta: { title: '仿真通用数据', parentTitle: '数据管理', parentPath: '/data/sim_common_property' },
       },
+      // ── 整车仿真测试 ──────────────────────────────────────────────
+      {
+        path: 'agv-sim/versions',
+        name: 'AgvSimVersions',
+        component: () => import('@/views/sim_test_agv/AutoTestVersionsList.vue'),
+        meta: { title: '自动化版本', parentTitle: '整车仿真测试', parentPath: '/agv-sim/versions' },
+      },
+      {
+        path: 'agv-sim/case-map',
+        name: 'AgvSimCaseMap',
+        component: () => import('@/views/sim_test_agv/CaseMapList.vue'),
+        meta: { title: '地图管理', parentTitle: '整车仿真测试', parentPath: '/agv-sim/case-map' },
+      },
+      {
+        path: 'agv-sim/case-property',
+        name: 'AgvSimCaseProperty',
+        component: () => import('@/views/sim_test_agv/CasePropertyList.vue'),
+        meta: { title: '资产管理', parentTitle: '整车仿真测试', parentPath: '/agv-sim/case-property' },
+      },
+      {
+        path: 'agv-sim/common-parameter',
+        name: 'AgvSimCommonParameter',
+        component: () => import('@/views/sim_test_agv/SchemeCommonParameterList.vue'),
+        meta: { title: '通用参数', parentTitle: '整车仿真测试', parentPath: '/agv-sim/common-parameter' },
+      },
+      {
+        path: 'agv-sim/case-template',
+        name: 'AgvSimCaseTemplate',
+        component: () => import('@/views/sim_test_agv/CaseTemplateList.vue'),
+        meta: { title: '用例模版', parentTitle: '整车仿真测试', parentPath: '/agv-sim/case-template' },
+      },
+      {
+        path: 'agv-sim/test-task',
+        name: 'AgvSimTestTask',
+        component: () => import('@/views/sim_test_agv/AgvTestTaskList.vue'),
+        meta: { title: '测试任务', parentTitle: '整车仿真测试', parentPath: '/agv-sim/test-task' },
+      },
+      // ── 感知取货测试 ──────────────────────────────────────────────
+      {
+        path: 'get-test/target',
+        name: 'GetTestTarget',
+        component: () => import('@/views/sim_test_get/GetTestTargetList.vue'),
+        meta: { title: '物体数据', parentTitle: '感知取货测试', parentPath: '/get-test/target' },
+      },
+      {
+        path: 'get-test/agv-body',
+        name: 'GetTestAgvBody',
+        component: () => import('@/views/sim_test_get/AgvBodyList.vue'),
+        meta: { title: '车体数据', parentTitle: '感知取货测试', parentPath: '/get-test/agv-body' },
+      },
+      {
+        path: 'get-test/common-param',
+        name: 'GetTestCommonParam',
+        component: () => import('@/views/sim_test_get/GetTestCommonParamList.vue'),
+        meta: { title: '测试通参', parentTitle: '感知取货测试', parentPath: '/get-test/common-param' },
+      },
     ],
   },
   {
+    path: '/dd-callback',
+    name: 'DingTalkCallback',
+    component: () => import('@/views/DingTalkCallback.vue'),
+    meta: { title: '钉钉登录中...' },
+  },
+  {
     path: '/:pathMatch(.*)*',
-    redirect: '/',
+    component: () => import('@/layout/BasicLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'NotFound',
+        component: () => import('@/views/NotFound.vue'),
+        meta: { title: '页面不存在' },
+      },
+    ],
   },
 ]
 

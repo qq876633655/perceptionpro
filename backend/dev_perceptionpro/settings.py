@@ -53,6 +53,8 @@ INSTALLED_APPS = [
     'apps.back_stage.apps.BackStageConfig',
     'apps.version_pack.apps.VersionPackConfig',
     'apps.data_manage.apps.DataManageConfig',
+    'apps.sim_test_agv.apps.SimTestAgvConfig',
+    'apps.sim_test_get.apps.SimTestGetConfig',
 ]
 
 # REST_FRAMEWORK = {

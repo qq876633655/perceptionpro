@@ -58,6 +58,8 @@ class HasModelPermission(BasePermission):
         'partial_update': 'change',
         'destroy':        'delete',
         'batch_delete':   'delete',
+        'batch_copy':     'add',
+        'cancel':         'change',
     }
 
     def has_permission(self, request, view):

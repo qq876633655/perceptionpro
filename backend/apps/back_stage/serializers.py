@@ -92,10 +92,14 @@ class UserSerializer(serializers.ModelSerializer):
             validated_data.pop('is_staff', None)
             validated_data.pop('is_superuser', None)
         groups = validated_data.pop('groups', [])
-        password = validated_data.pop('password', 'Test123456')
-        validated_data['password'] = make_password(password)
+        password = validated_data.pop('password', None)
+        is_default = password is None
+        validated_data['password'] = make_password(password or 'Test123456')
         user = super().create(validated_data)
         user.groups.set(groups)
+        if is_default:
+            user.is_default_password = True
+            user.save(update_fields=['is_default_password'])
         return user
 
     def update(self, instance, validated_data):
@@ -107,6 +111,7 @@ class UserSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password', None)
         if password:
             validated_data['password'] = make_password(password)
+            validated_data['is_default_password'] = False
         instance = super().update(instance, validated_data)
         if groups is not None:
             instance.groups.set(groups)

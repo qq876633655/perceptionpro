@@ -6,12 +6,19 @@
     :close-on-click-modal="false"
     @closed="handleClosed"
   >
+    <el-alert
+      v-if="isDefault"
+      type="warning"
+      :closable="false"
+      style="margin-bottom: 16px"
+      title="当前使用的是默认密码，请尽快修改以保障账号安全。"
+    />
     <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
       <el-form-item label="当前密码" prop="old_password">
         <el-input
           v-model="form.old_password"
           type="password"
-          placeholder="请输入当前密码"
+          :placeholder="isDefault ? '默认密码 Test123456' : '请输入当前密码'"
           show-password
           clearable
         />
@@ -44,7 +51,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { changePassword } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
@@ -63,10 +70,19 @@ const router = useRouter()
 const formRef = ref(null)
 const submitting = ref(false)
 
+const isDefault = computed(() => !!authStore.userInfo?.is_default_password)
+
 const form = reactive({
   old_password: '',
   new_password: '',
   confirm_password: '',
+})
+
+// 开启弹框时，如果是默认密码则自动填入
+watch(visible, (val) => {
+  if (val && isDefault.value) {
+    form.old_password = 'Test123456'
+  }
 })
 
 const rules = {

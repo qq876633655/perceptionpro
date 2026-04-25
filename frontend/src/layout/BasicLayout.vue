@@ -2,15 +2,21 @@
   <el-container class="layout-container">
     <!-- 侧边栏 -->
     <el-aside :width="isCollapsed ? '64px' : '220px'" class="layout-aside">
-      <div class="sidebar-logo">
-        <span v-if="!isCollapsed" class="logo-text">PerceptionPro</span>
-        <span v-else class="logo-icon">P</span>
+      <div class="sidebar-logo" :class="{ 'logo-collapsed': isCollapsed }">
+        <img
+          src="/logo.png"
+          :class="isCollapsed ? 'logo-img-sm' : 'logo-img'"
+          alt="logo"
+        />
+        <Transition name="logo-fade">
+          <span v-if="!isCollapsed" class="logo-text">PerceptionPro</span>
+        </Transition>
       </div>
 
       <el-menu
         :default-active="activeMenu"
-        background-color="#001529"
-        text-color="#a6adb4"
+        background-color="#f0f2f5"
+        text-color="#303133"
         active-text-color="#ffffff"
         :collapse="isCollapsed"
         :collapse-transition="false"
@@ -20,6 +26,15 @@
           <el-icon><HomeFilled /></el-icon>
           <template #title>仪表盘</template>
         </el-menu-item>
+
+        <el-sub-menu v-if="authStore.userInfo?.is_staff" index="/system">
+          <template #title>
+            <el-icon><Setting /></el-icon>
+            <span>系统管理</span>
+          </template>
+          <el-menu-item index="/system/users">用户管理</el-menu-item>
+          <el-menu-item index="/system/roles">角色管理</el-menu-item>
+        </el-sub-menu>
 
         <el-sub-menu index="/versions">
           <template #title>
@@ -33,15 +48,6 @@
           <el-menu-item index="/versions/sen">传感器版本</el-menu-item>
         </el-sub-menu>
 
-        <el-sub-menu v-if="authStore.userInfo?.is_staff" index="/system">
-          <template #title>
-            <el-icon><Setting /></el-icon>
-            <span>系统管理</span>
-          </template>
-          <el-menu-item index="/system/users">用户管理</el-menu-item>
-          <el-menu-item index="/system/roles">角色管理</el-menu-item>
-        </el-sub-menu>
-
         <el-sub-menu index="/data">
           <template #title>
             <el-icon><Folder /></el-icon>
@@ -49,6 +55,29 @@
           </template>
           <el-menu-item index="/data/sim_project_property">仿真项目数据</el-menu-item>
           <el-menu-item index="/data/sim_common_property">仿真通用数据</el-menu-item>
+        </el-sub-menu>
+
+        <el-sub-menu index="/agv-sim">
+          <template #title>
+            <el-icon><Cpu /></el-icon>
+            <span>整车仿真测试</span>
+          </template>
+          <el-menu-item index="/agv-sim/versions">自动化版本</el-menu-item>
+          <el-menu-item index="/agv-sim/case-map">地图管理</el-menu-item>
+          <el-menu-item index="/agv-sim/case-property">资产管理</el-menu-item>
+          <el-menu-item index="/agv-sim/common-parameter">通用参数</el-menu-item>
+          <el-menu-item index="/agv-sim/case-template">用例模版</el-menu-item>
+          <el-menu-item index="/agv-sim/test-task">测试任务</el-menu-item>
+        </el-sub-menu>
+
+        <el-sub-menu v-if="authStore.userInfo?.is_staff" index="/get-test">
+          <template #title>
+            <el-icon><Box /></el-icon>
+            <span>感知取货测试</span>
+          </template>
+          <el-menu-item index="/get-test/target">物体数据</el-menu-item>
+          <el-menu-item index="/get-test/agv-body">车体数据</el-menu-item>
+          <el-menu-item index="/get-test/common-param">测试通参</el-menu-item>
         </el-sub-menu>
       </el-menu>
     </el-aside>
@@ -74,7 +103,13 @@
         <div class="header-right">
           <el-dropdown @command="handleCommand">
             <span class="user-info">
-              <el-avatar size="small" :icon="UserFilled" />
+              <el-avatar
+                size="small"
+                :src="authStore.userInfo?.avatar || ''"
+                :icon="authStore.userInfo?.avatar ? undefined : UserFilled"
+                class="user-avatar"
+                @click.stop="triggerAvatarUpload"
+              />
               <span class="username">{{ authStore.userInfo?.username ?? '用户' }}</span>
               <el-icon class="el-icon--right"><ArrowDown /></el-icon>
             </span>
@@ -85,6 +120,13 @@
               </el-dropdown-menu>
             </template>
           </el-dropdown>
+          <input
+            ref="avatarInputRef"
+            type="file"
+            accept="image/*"
+            style="display:none"
+            @change="handleAvatarChange"
+          />
         </div>
       </el-header>
 
@@ -103,10 +145,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
+import { uploadAvatar } from '@/api/auth'
 import ChangePasswordDialog from '@/components/ChangePasswordDialog.vue'
 
 const authStore = useAuthStore()
@@ -115,6 +158,16 @@ const router = useRouter()
 
 const isCollapsed = ref(false)
 const changePwdVisible = ref(false)
+const avatarInputRef = ref(null)
+
+// 默认密码未修改时自动弹出修改密码框
+watch(
+  () => authStore.userInfo?.is_default_password,
+  (val) => {
+    if (val) changePwdVisible.value = true
+  },
+  { immediate: true },
+)
 
 const activeMenu = computed(() => route.path)
 const currentTitle = computed(() => route.meta?.title)
@@ -135,6 +188,32 @@ async function handleCommand(command) {
     changePwdVisible.value = true
   }
 }
+
+function triggerAvatarUpload() {
+  avatarInputRef.value?.click()
+}
+
+async function handleAvatarChange(e) {
+  const file = e.target.files?.[0]
+  if (!file) return
+  if (file.size > 3 * 1024 * 1024) {
+    ElMessage.error('图片不能超过 3MB')
+    e.target.value = ''
+    return
+  }
+  const fd = new FormData()
+  fd.append('avatar', file)
+  try {
+    const res = await uploadAvatar(fd)
+    // 同步更新内存中的头像，不必重新拉取 userInfo
+    if (authStore.userInfo) authStore.userInfo.avatar = res.data.avatar
+    ElMessage.success('头像上传成功')
+  } catch {
+    // 错误已由拦截器统一提示
+  } finally {
+    e.target.value = ''
+  }
+}
 </script>
 
 <style scoped>
@@ -144,11 +223,12 @@ async function handleCommand(command) {
 }
 
 .layout-aside {
-  background-color: #001529;
+  background-color: #f0f2f5;
   transition: width 0.3s;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  border-right: 1px solid #e0e3e8;
 }
 
 .sidebar-logo {
@@ -156,13 +236,44 @@ async function handleCommand(command) {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #002040;
+  gap: 8px;
+  background-color: #f0f2f5;
   overflow: hidden;
+  flex-shrink: 0;
+  padding: 0 12px;
+  border-bottom: 1px solid #e0e3e8;
+  transition: padding 0.3s;
+}
+
+.sidebar-logo.logo-collapsed {
+  padding: 0;
+  gap: 0;
+}
+
+.logo-fade-enter-active,
+.logo-fade-leave-active {
+  transition: opacity 0.15s ease;
+}
+.logo-fade-enter-from,
+.logo-fade-leave-to {
+  opacity: 0;
+}
+
+.logo-img {
+  height: 28px;
+  width: 28px;
+  object-fit: contain;
   flex-shrink: 0;
 }
 
+.logo-img-sm {
+  height: 32px;
+  width: 32px;
+  object-fit: contain;
+}
+
 .logo-text {
-  color: #fff;
+  color: #303133;
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 1px;
@@ -194,6 +305,9 @@ async function handleCommand(command) {
   justify-content: space-between;
   padding: 0 20px;
   box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .header-left {
@@ -210,12 +324,21 @@ async function handleCommand(command) {
 }
 
 .collapse-btn:hover {
-  color: #1890ff;
+  color: #595959;
 }
 
 .header-right {
   display: flex;
   align-items: center;
+}
+
+.user-avatar {
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.user-avatar:hover {
+  opacity: 0.8;
 }
 
 .user-info {

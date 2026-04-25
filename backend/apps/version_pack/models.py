@@ -1,19 +1,10 @@
 import os
 
-from django.core.files.storage import FileSystemStorage
 from django.db import models
-from django.db.models.signals import post_delete
+from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
 from apps.common_views.models import CommonDatetime
 from django.core.validators import FileExtensionValidator
-
-
-class OverwriteStorage(FileSystemStorage):
-    def get_available_name(self, name, max_length=None):
-        # 如果存在同名文件，则删除它
-        if self.exists(name):
-            self.delete(name)
-        return name
 
 
 class BaseEnv(CommonDatetime):
@@ -45,6 +36,7 @@ class BaseVersion(CommonDatetime):
     versions_type = models.JSONField(verbose_name="版本类型")
     apply_project = models.CharField(verbose_name="适用专项", max_length=16, default='主线版本')
     dev_test_result = models.TextField(verbose_name="研发提测", null=True, blank=True)
+    # 新建时不提供下面两个字段
     test_result = models.CharField(verbose_name="测试结果", max_length=32, choices=test_result_choices, null=True,
                                    blank=True, default="未开始")
     test_verdict = models.TextField(verbose_name="测试总结", null=True, blank=True)
@@ -52,6 +44,10 @@ class BaseVersion(CommonDatetime):
     class Meta:
         abstract = True
 
+
+# ════════════════════════════════════════════════════════════════════
+# 感知模块  per_*
+# ════════════════════════════════════════════════════════════════════
 
 def per_env_path(instance, filename):
     return os.path.join('per_env', str(instance.env_name), filename)
@@ -66,9 +62,9 @@ def per_version_path(instance, filename):
 
 
 class PerVersion(BaseVersion):
-    version_file = models.FileField(verbose_name="版本文件", upload_to=per_version_path, storage=OverwriteStorage())
+    version_file = models.FileField(verbose_name="版本文件", upload_to=per_version_path)
     env = models.ForeignKey(PerEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True)
-    database_file = models.FileField(verbose_name="数据库文件", upload_to=per_version_path, storage=OverwriteStorage(),
+    database_file = models.FileField(verbose_name="数据库文件", upload_to=per_version_path,
                                      null=True, blank=True, validators=[FileExtensionValidator(['db'])])
 
 
@@ -89,7 +85,7 @@ def loc_version_path(instance, filename):
 
 
 class LocVersion(BaseVersion):
-    version_file = models.FileField(verbose_name="版本文件", upload_to=loc_version_path, storage=OverwriteStorage())
+    version_file = models.FileField(verbose_name="版本文件", upload_to=loc_version_path)
     env = models.ForeignKey(LocEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True)
 
 
@@ -110,7 +106,7 @@ def ctl_version_path(instance, filename):
 
 
 class CtlVersion(BaseVersion):
-    version_file = models.FileField(verbose_name="版本文件", upload_to=ctl_version_path, storage=OverwriteStorage())
+    version_file = models.FileField(verbose_name="版本文件", upload_to=ctl_version_path)
     env = models.ForeignKey(CtlEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True)
 
 
@@ -131,7 +127,7 @@ def sim_version_path(instance, filename):
 
 
 class SimVersion(BaseVersion):
-    version_file = models.FileField(verbose_name="版本文件", upload_to=sim_version_path, storage=OverwriteStorage())
+    version_file = models.FileField(verbose_name="版本文件", upload_to=sim_version_path)
     env = models.ForeignKey(SimEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True)
 
 
@@ -152,42 +148,58 @@ def sen_version_path(instance, filename):
 
 
 class SenVersion(BaseVersion):
-    version_file = models.FileField(verbose_name="版本文件", upload_to=sen_version_path, storage=OverwriteStorage())
+    version_file = models.FileField(verbose_name="版本文件", upload_to=sen_version_path)
     env = models.ForeignKey(SenEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True)
 
 
 # ════════════════════════════════════════════════════════════════════
-# post_delete 信号：删除记录时同步清理物理文件
-# 覆盖单条 delete() 和 QuerySet.filter().delete()（含 batch_delete）
+# 文件信号：pre_save 更新时删旧文件，post_delete 删记录时删文件
 # ════════════════════════════════════════════════════════════════════
 
-def _delete_filefields(instance, field_names):
-    """删除 instance 上指定 FileField 的物理文件"""
-    for name in field_names:
-        f = getattr(instance, name, None)
-        if f:
-            f.delete(save=False)
-
-
-_MODEL_FILE_FIELDS = [
-    (PerEnv,     ['env_file']),
+# 模型 → FileField 名称列表
+_FILE_SIGNAL_REGISTRY = [
+    (PerEnv, ['env_file']),
     (PerVersion, ['version_file', 'database_file']),
-    (LocEnv,     ['env_file']),
+    (LocEnv, ['env_file']),
     (LocVersion, ['version_file']),
-    (CtlEnv,     ['env_file']),
+    (CtlEnv, ['env_file']),
     (CtlVersion, ['version_file']),
-    (SimEnv,     ['env_file']),
+    (SimEnv, ['env_file']),
     (SimVersion, ['version_file']),
-    (SenEnv,     ['env_file']),
+    (SenEnv, ['env_file']),
     (SenVersion, ['version_file']),
 ]
 
 
-def _make_delete_handler(field_names):
+def _make_pre_save_handler(model_cls, field_names):
     def handler(sender, instance, **kwargs):
-        _delete_filefields(instance, field_names)
+        if not instance.pk:
+            return
+        try:
+            old = model_cls.objects.get(pk=instance.pk)
+        except model_cls.DoesNotExist:
+            return
+        for name in field_names:
+            old_f = getattr(old, name, None)
+            new_f = getattr(instance, name, None)
+            old_name = old_f.name if old_f else None
+            new_name = new_f.name if new_f else None
+            if old_name and old_name != new_name:
+                old_f.delete(save=False)
+
     return handler
 
 
-for _model, _fields in _MODEL_FILE_FIELDS:
-    receiver(post_delete, sender=_model)(_make_delete_handler(_fields))
+def _make_post_delete_handler(field_names):
+    def handler(sender, instance, **kwargs):
+        for name in field_names:
+            f = getattr(instance, name, None)
+            if f:
+                f.delete(save=False)
+
+    return handler
+
+
+for _model, _fields in _FILE_SIGNAL_REGISTRY:
+    receiver(pre_save, sender=_model)(_make_pre_save_handler(_model, _fields))
+    receiver(post_delete, sender=_model)(_make_post_delete_handler(_fields))

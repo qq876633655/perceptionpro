@@ -21,6 +21,7 @@ from drf_yasg import openapi
 from rest_framework import permissions
 from django.conf import settings
 from django.conf.urls.static import static
+from apps.back_stage.views import dd_login
 
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -48,10 +49,13 @@ urlpatterns = [
     path('api/', include('apps.back_stage.urls')),
     path('api/', include('apps.version_pack.urls')),
     path('api/', include('apps.data_manage.urls')),
+    path('api/', include('apps.sim_test_agv.urls')),
+    path('api/', include('apps.sim_test_get.urls')),
 
     # 认证
     path('api/token/', TokenObtainPairView.as_view()),
     path('api/token/refresh/', TokenRefreshView.as_view()),
+    path('dd/no_sign_in/',dd_login),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

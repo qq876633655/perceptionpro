@@ -39,6 +39,10 @@ service.interceptors.response.use(
     if (response.status === 204) {
       return { code: 0, msg: 'success', data: null }
     }
+    // blob 类型（文件下载）直接返回
+    if (response.config?.responseType === 'blob') {
+      return response.data
+    }
     const res = response.data
     // 后端统一格式：{ code, msg, data }
     if (res.code !== 0) {
@@ -110,4 +114,25 @@ function _forceLogout() {
 }
 
 export default service
+
+/**
+ * 下载文件（blob流），触发浏览器保存对话框
+ * @param {string} url  - 相对 API 路径
+ * @param {object} params - query 参数
+ * @param {string} filename - 下载保存的文件名
+ */
+export async function downloadBlob(url, params = {}, filename = 'download') {
+  const authStore = useAuthStore()
+  const resp = await service.get(url, {
+    params,
+    responseType: 'blob',
+    headers: authStore.token ? { Authorization: `Bearer ${authStore.token}` } : {},
+  })
+  // resp 已是 Blob（经拦截器直通）
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(resp)
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(a.href)
+}
 

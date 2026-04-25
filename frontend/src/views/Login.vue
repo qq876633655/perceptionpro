@@ -1,50 +1,81 @@
 <template>
   <div class="login-page">
-    <div class="login-card">
-      <div class="login-header">
-        <h1 class="login-title">PerceptionPro</h1>
-        <p class="login-subtitle">智能感知管理平台</p>
+    <!-- 左侧视频区 -->
+    <div class="login-video-side">
+      <video
+        class="bg-video"
+        src="/login_bg-6ef8a3fb.mp4"
+        autoplay
+        loop
+        muted
+        playsinline
+      />
+      <!-- 半透明遮罩 + 品牌文字 -->
+      <div class="video-overlay">
+        <h1 class="brand-title">PerceptionPro</h1>
+        <p class="brand-subtitle">测试管理平台</p>
       </div>
+    </div>
 
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="rules"
-        label-position="top"
-        size="large"
-        @keyup.enter="handleLogin"
-      >
-        <el-form-item label="手机号" prop="phone_number">
-          <el-input
-            v-model="form.phone_number"
-            placeholder="请输入手机号"
-            prefix-icon="Phone"
-            clearable
-          />
-        </el-form-item>
+    <!-- 右侧表单区 -->
+    <div class="login-form-side">
+      <div class="login-card">
+        <div class="login-header">
+          <h2 class="login-title">欢迎登录</h2>
+          <p class="login-subtitle">请使用手机号或钉钉账号登录</p>
+        </div>
 
-        <el-form-item label="密码" prop="password">
-          <el-input
-            v-model="form.password"
-            type="password"
-            placeholder="请输入密码"
-            prefix-icon="Lock"
-            show-password
-            clearable
-          />
-        </el-form-item>
+        <el-form
+          ref="formRef"
+          :model="form"
+          :rules="rules"
+          label-position="top"
+          size="large"
+          @keyup.enter="handleLogin"
+        >
+          <el-form-item label="手机号" prop="phone_number">
+            <el-input
+              v-model="form.phone_number"
+              placeholder="请输入手机号"
+              prefix-icon="Phone"
+              clearable
+            />
+          </el-form-item>
 
-        <el-form-item>
-          <el-button
-            type="primary"
-            class="login-btn"
-            :loading="loading"
-            @click="handleLogin"
-          >
-            登 录
-          </el-button>
-        </el-form-item>
-      </el-form>
+          <el-form-item label="密码" prop="password">
+            <el-input
+              v-model="form.password"
+              type="password"
+              placeholder="请输入密码"
+              prefix-icon="Lock"
+              show-password
+              clearable
+            />
+          </el-form-item>
+
+          <el-form-item>
+            <el-button
+              type="primary"
+              class="login-btn"
+              :loading="loading"
+              @click="handleLogin"
+            >
+              登 录
+            </el-button>
+          </el-form-item>
+
+          <div class="divider-text"><span>或</span></div>
+
+          <el-form-item>
+            <el-button
+              class="login-btn dingtalk-btn"
+              @click="handleDingTalkLogin"
+            >
+              钉钉登录
+            </el-button>
+          </el-form-item>
+        </el-form>
+      </div>
     </div>
   </div>
 </template>
@@ -78,6 +109,14 @@ const rules = {
   ],
 }
 
+function handleDingTalkLogin() {
+  const url =
+    'https://login.dingtalk.com/oauth2/auth?redirect_uri=' +
+    encodeURIComponent('http://' + window.location.hostname + ':' + 7898 + '/dd/no_sign_in/') +
+    '&response_type=code&scope=openid&client_id=dingnnpn4oajxevomvwj&prompt=consent'
+  window.location.href = url
+}
+
 async function handleLogin() {
   const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
@@ -104,45 +143,130 @@ async function handleLogin() {
 </script>
 
 <style scoped>
+/* ── 整体容器 ── */
 .login-page {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── 左侧视频区 ── */
+.login-video-side {
+  position: relative;
+  width: 50%;
+  overflow: hidden;
+  background: #111;
+}
+
+.bg-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.video-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px;
+}
+
+.brand-title {
+  font-size: 34px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 3px;
+  margin: 0 0 12px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.brand-subtitle {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  letter-spacing: 2px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* ── 右侧表单区 ── */
+.login-form-side {
+  width: 50%;
+  background: #f0f2f5;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .login-card {
-  width: 400px;
+  width: 380px;
   background: #fff;
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 48px 40px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .login-header {
   text-align: center;
-  margin-bottom: 36px;
+  margin-bottom: 32px;
 }
 
 .login-title {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 700;
-  color: #303133;
-  letter-spacing: 2px;
+  color: #1a1a1a;
+  margin: 0 0 8px;
 }
 
 .login-subtitle {
-  margin-top: 8px;
   font-size: 13px;
   color: #909399;
+  margin: 0;
 }
 
 .login-btn {
   width: 100%;
   height: 44px;
-  font-size: 16px;
+  font-size: 15px;
   letter-spacing: 2px;
-  margin-top: 8px;
 }
+
+.dingtalk-btn {
+  background-color: #1a6de0;
+  border-color: #1a6de0;
+  color: #fff;
+}
+
+.dingtalk-btn:hover,
+.dingtalk-btn:focus {
+  background-color: #1559c0;
+  border-color: #1559c0;
+  color: #fff;
+}
+
+/* 或 分隔线 */
+.divider-text {
+  text-align: center;
+  color: #c0c4cc;
+  font-size: 12px;
+  margin: -4px 0 8px;
+  position: relative;
+}
+.divider-text::before,
+.divider-text::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 38%;
+  height: 1px;
+  background: #e4e7ed;
+}
+.divider-text::before { left: 0; }
+.divider-text::after  { right: 0; }
 </style>

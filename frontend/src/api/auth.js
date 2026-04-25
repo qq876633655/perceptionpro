@@ -56,3 +56,39 @@ export function changePassword(data) {
     data,
   })
 }
+
+/**
+ * 上传头像
+ * 接口：POST /api/avatar/
+ */
+export function uploadAvatar(formData) {
+  return request({
+    url: '/avatar/',
+    method: 'post',
+    data: formData,
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+}
+
+/**
+ * 获取所有角色列表（申请权限时用）
+ * 接口：GET /api/groups/
+ */
+export function getGroups() {
+  return request({
+    url: '/groups/',
+    method: 'get',
+  })
+}
+
+/**
+ * 提交角色申请
+ * 接口：POST /api/role_request/
+ */
+export function roleRequest(data) {
+  return request({
+    url: '/role_request/',
+    method: 'post',
+    data,
+  })
+}
