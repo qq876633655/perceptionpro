@@ -55,17 +55,17 @@ def per_env_path(instance, filename):
     return f'version_pack/per_env/{instance.uid}/{filename}'
 
 class PerEnv(BaseEnv):
-    env_file = models.FileField(verbose_name="环境文件", upload_to=per_env_path)
+    env_file = models.FileField(verbose_name="环境文件", upload_to=per_env_path, max_length=512)
 
 
 def per_version_path(instance, filename):
     return f'version_pack/per_ver/{instance.uid}/{filename}'
 
 class PerVersion(BaseVersion):
-    version_file = models.FileField(verbose_name="版本文件", upload_to=per_version_path)
+    version_file = models.FileField(verbose_name="版本文件", upload_to=per_version_path, max_length=512)
     env = models.ForeignKey(PerEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True)
     database_file = models.FileField(verbose_name="数据库文件", upload_to=per_version_path,
-                                     null=True, blank=True, validators=[FileExtensionValidator(['db'])])
+                                     null=True, blank=True, max_length=512, validators=[FileExtensionValidator(['db'])])
 
 
 # ════════════════════════════════════════════════════════════════════
@@ -76,14 +76,14 @@ def loc_env_path(instance, filename):
     return f'version_pack/loc_env/{instance.uid}/{filename}'
 
 class LocEnv(BaseEnv):
-    env_file = models.FileField(verbose_name="环境文件", upload_to=loc_env_path)
+    env_file = models.FileField(verbose_name="环境文件", upload_to=loc_env_path, max_length=512)
 
 
 def loc_version_path(instance, filename):
     return f'version_pack/loc_ver/{instance.uid}/{filename}'
 
 class LocVersion(BaseVersion):
-    version_file = models.FileField(verbose_name="版本文件", upload_to=loc_version_path)
+    version_file = models.FileField(verbose_name="版本文件", upload_to=loc_version_path, max_length=512)
     env = models.ForeignKey(LocEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True)
 
 
@@ -95,14 +95,14 @@ def ctl_env_path(instance, filename):
     return f'version_pack/ctl_env/{instance.uid}/{filename}'
 
 class CtlEnv(BaseEnv):
-    env_file = models.FileField(verbose_name="环境文件", upload_to=ctl_env_path)
+    env_file = models.FileField(verbose_name="环境文件", upload_to=ctl_env_path, max_length=512)
 
 
 def ctl_version_path(instance, filename):
     return f'version_pack/ctl_ver/{instance.uid}/{filename}'
 
 class CtlVersion(BaseVersion):
-    version_file = models.FileField(verbose_name="版本文件", upload_to=ctl_version_path)
+    version_file = models.FileField(verbose_name="版本文件", upload_to=ctl_version_path, max_length=512)
     env = models.ForeignKey(CtlEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True)
 
 
@@ -114,14 +114,14 @@ def sim_env_path(instance, filename):
     return f'version_pack/sim_env/{instance.uid}/{filename}'
 
 class SimEnv(BaseEnv):
-    env_file = models.FileField(verbose_name="环境文件", upload_to=sim_env_path)
+    env_file = models.FileField(verbose_name="环境文件", upload_to=sim_env_path, max_length=512)
 
 
 def sim_version_path(instance, filename):
     return f'version_pack/sim_ver/{instance.uid}/{filename}'
 
 class SimVersion(BaseVersion):
-    version_file = models.FileField(verbose_name="版本文件", upload_to=sim_version_path)
+    version_file = models.FileField(verbose_name="版本文件", upload_to=sim_version_path, max_length=512)
     env = models.ForeignKey(SimEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True)
 
 
@@ -133,14 +133,14 @@ def sen_env_path(instance, filename):
     return f'version_pack/sen_env/{instance.uid}/{filename}'
 
 class SenEnv(BaseEnv):
-    env_file = models.FileField(verbose_name="环境文件", upload_to=sen_env_path)
+    env_file = models.FileField(verbose_name="环境文件", upload_to=sen_env_path, max_length=512)
 
 
 def sen_version_path(instance, filename):
     return f'version_pack/sen_ver/{instance.uid}/{filename}'
 
 class SenVersion(BaseVersion):
-    version_file = models.FileField(verbose_name="版本文件", upload_to=sen_version_path)
+    version_file = models.FileField(verbose_name="版本文件", upload_to=sen_version_path, max_length=512)
     env = models.ForeignKey(SenEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True)
 
 
@@ -152,14 +152,14 @@ def at_env_path(instance, filename):
     return f'version_pack/at_env/{instance.uid}/{filename}'
 
 class AtEnv(BaseEnv):
-    env_file = models.FileField(verbose_name="环境文件", upload_to=at_env_path)
+    env_file = models.FileField(verbose_name="环境文件", upload_to=at_env_path, max_length=512)
 
 
 def at_version_path(instance, filename):
     return f'version_pack/at_ver/{instance.uid}/{filename}'
 
 class AtVersion(BaseVersion):
-    version_file = models.FileField(verbose_name="版本文件", upload_to=at_version_path)
+    version_file = models.FileField(verbose_name="版本文件", upload_to=at_version_path, max_length=512)
     env = models.ForeignKey(AtEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True)
 
 

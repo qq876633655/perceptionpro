@@ -92,7 +92,7 @@ server {
     # API 代理到 gunicorn（生产用 8010）
     location /api/ {
         proxy_pass http://127.0.0.1:8010;
-        proxy_set_header Host $host;
+        proxy_set_header Host $host:$server_port;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_read_timeout 120;
     }
@@ -100,7 +100,7 @@ server {
     # 钉钉回调代理到 gunicorn（/dd/no_sign_in/ 不在 /api/ 前缀下）
     location /dd/ {
         proxy_pass http://127.0.0.1:8010;
-        proxy_set_header Host $host;
+        proxy_set_header Host $host:$server_port;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_read_timeout 60;
     }
@@ -186,6 +186,7 @@ sudo systemctl restart perceptionpro
 sudo systemctl status perceptionpro --no-pager
 
 # Nginx
+sudo systemctl stop nginx
 sudo systemctl reload nginx
 sudo systemctl restart nginx
 
