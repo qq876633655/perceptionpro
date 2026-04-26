@@ -70,6 +70,8 @@ per_celery.autodiscover_tasks()
 
 # ── 生产环境覆盖（celery_prod.py 不被 git 追踪）────────────────────────
 try:
-    from dev_perceptionpro.celery_prod import *  # noqa
+    from dev_perceptionpro import celery_prod as _prod
+    if hasattr(_prod, 'BROKER_URL'):
+        per_celery.conf.broker_url = _prod.BROKER_URL
 except ImportError:
     pass

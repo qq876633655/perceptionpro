@@ -211,7 +211,8 @@ __marimo__/
 !**/migrations/__init__.py
 backend/media
 .idea
-**/logs
+**/logs/*
+!**/logs/__init__.py
 # 生产环境覆盖配置（仅存在于生产服务器，不入库）
 backend/dev_perceptionpro/local_settings.py
 backend/dev_perceptionpro/celery_prod.py
