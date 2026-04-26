@@ -9,23 +9,6 @@ from django.dispatch import receiver
 from apps.common_views.models import CommonDatetime
 
 
-def versions_file_path(instance, filename):
-    return os.path.join('at_versions', str(instance.uid), filename)
-
-
-class AutoTestVersions(CommonDatetime):
-    """
-    版本控制表
-    """
-    uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    versions = models.CharField(verbose_name="版本号", max_length=128, unique=True)
-    versions_file = models.FileField(verbose_name="版本文件", upload_to=versions_file_path, max_length=256)
-    release_note = models.TextField(verbose_name="发布说明", null=True, blank=True)
-
-    def __str__(self):
-        return self.versions
-
-
 class CaseMap(CommonDatetime):
     district_name = models.CharField(verbose_name="分区名称", max_length=255, unique=True)
     map_file = models.FileField(verbose_name="地图文件", upload_to="sim_res_bak/map/", max_length=255)
@@ -167,26 +150,7 @@ class AgvTestTask(CommonDatetime):
 # 文件信号
 # ════════════════════════════════════════════════════════════════════
 
-# ── AutoTestVersions ─────────────────────────────────────────────────
-@receiver(pre_save, sender=AutoTestVersions)
-def _at_versions_pre_save(sender, instance, **kwargs):
-    if not instance.pk:
-        return
-    try:
-        old = AutoTestVersions.objects.get(pk=instance.pk)
-    except AutoTestVersions.DoesNotExist:
-        return
-    if old.versions_file and old.versions_file.name != instance.versions_file.name:
-        old.versions_file.delete(save=False)
-
-
-@receiver(post_delete, sender=AutoTestVersions)
-def _at_versions_post_delete(sender, instance, **kwargs):
-    if instance.versions_file:
-        instance.versions_file.delete(save=False)
-
-
-# ── CaseMap ───────────────────────────────────────────────────────────
+# ── CaseMap ────────────────────────────────────────────────────────────────────
 @receiver(pre_save, sender=CaseMap)
 def _case_map_pre_save(sender, instance, **kwargs):
     if not instance.pk:

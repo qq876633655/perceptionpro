@@ -212,6 +212,9 @@ STATICFILES_DIRS = [
 
 STATIC_URL = 'static/'
 
+# 生产环境 collectstatic 输出目录（开发时不生效）
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -249,3 +252,76 @@ ASGI_APPLICATION = "per_test_platform.asgi.application"
 AUTH_USER_MODEL = 'back_stage.User'
 
 CORS_ALLOW_ALL_ORIGINS = True
+
+# ── 生产环境覆盖（local_settings.py 不被 git 追踪）────────────────────
+try:
+    from dev_perceptionpro.local_settings import *  # noqa
+except ImportError:
+    pass
+
+# ── Logging ──────────────────────────────────────────────────────────────────
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+
+    'formatters': {
+        'verbose': {
+            'format': '{asctime} [{levelname}] {name} - {message}',
+            'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+    },
+
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+            'level': 'INFO',
+        },
+        'file': {
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'app.log',
+            'when': 'midnight',
+            'backupCount': 30,          # 保留最近 30 天
+            'encoding': 'utf-8',
+            'formatter': 'verbose',
+            'level': 'DEBUG',
+        },
+        'audit_file': {
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'audit.log',
+            'when': 'midnight',
+            'backupCount': 90,          # 审计日志保留 90 天
+            'encoding': 'utf-8',
+            'formatter': 'verbose',
+            'level': 'INFO',
+        },
+    },
+
+    'loggers': {
+        # 审计日志（登录、增改删操作）
+        'apps.audit': {
+            'handlers': ['console', 'audit_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        # 业务日志（apps.xxx 均继承此 logger）
+        'apps': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        # Django 请求异常（4xx/5xx）
+        'django.request': {
+            'handlers': ['file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        # 其余 django 内部日志只写 WARNING+
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+    },
+}

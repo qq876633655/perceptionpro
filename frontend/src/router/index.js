@@ -82,6 +82,18 @@ const routes = [
         component: () => import('@/views/versions/sen/SenEnvList.vue'),
         meta: { title: '传感器环境', parentTitle: '版本管理', parentPath: '/versions/sen' },
       },
+      {
+        path: 'versions/at',
+        name: 'AtVersions',
+        component: () => import('@/views/versions/at/AtVersionList.vue'),
+        meta: { title: '自动化版本', parentTitle: '版本管理', parentPath: '/versions/at' },
+      },
+      {
+        path: 'envs/at',
+        name: 'AtEnvs',
+        component: () => import('@/views/versions/at/AtEnvList.vue'),
+        meta: { title: '自动化环境', parentTitle: '版本管理', parentPath: '/versions/at' },
+      },
       // ── 系统管理（仅 is_staff 可访） ───────────────────────
       {
         path: 'system/users',
@@ -109,12 +121,6 @@ const routes = [
         meta: { title: '仿真通用数据', parentTitle: '数据管理', parentPath: '/data/sim_common_property' },
       },
       // ── 整车仿真测试 ──────────────────────────────────────────────
-      {
-        path: 'agv-sim/versions',
-        name: 'AgvSimVersions',
-        component: () => import('@/views/sim_test_agv/AutoTestVersionsList.vue'),
-        meta: { title: '自动化版本', parentTitle: '整车仿真测试', parentPath: '/agv-sim/versions' },
-      },
       {
         path: 'agv-sim/case-map',
         name: 'AgvSimCaseMap',

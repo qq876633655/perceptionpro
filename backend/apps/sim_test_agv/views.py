@@ -16,16 +16,16 @@ from django.contrib.auth import get_user_model
 from apps.back_stage.permissions import HasModelPermission
 from apps.common_views.views import BaseModelViewSet
 from apps.sim_test_agv.models import (
-    AutoTestVersions, CaseMap, CaseProperty,
+    CaseMap, CaseProperty,
     SchemeCommonParameter, CaseTemplate, AgvTestTask,
 )
 from apps.sim_test_agv.serializers import (
-    AutoTestVersionsSerializer, CaseMapSerializer,
+    CaseMapSerializer,
     CasePropertySerializer, SchemeCommonParameterSerializer,
     CaseTemplateSerializer, AgvTestTaskCreateSerializer, AgvTestTaskListSerializer,
 )
 from apps.sim_test_agv.filters import (
-    AutoTestVersionsFilter, CaseMapFilter, CasePropertyFilter,
+    CaseMapFilter, CasePropertyFilter,
     SchemeCommonParameterFilter, CaseTemplateFilter, AgvTestTaskFilter,
 )
 from apps.sim_test_agv import tasks as agv_tasks
@@ -38,28 +38,6 @@ _FILTER_BACKENDS = [DjangoFilterBackend, SearchFilter, OrderingFilter]
 _FOLDER_FIELDS = {'lastagvpose_path', 'mapping_ecal_path', 'extend_mapping_ecal_path', 'ply_path'}
 
 
-# ── AutoTestVersions ─────────────────────────────────────────────────
-
-class AutoTestVersionsViewSet(BaseModelViewSet):
-    queryset = AutoTestVersions.objects.all().order_by('-create_time')
-    serializer_class = AutoTestVersionsSerializer
-    permission_classes = _PERMS
-    filter_backends = _FILTER_BACKENDS
-    filterset_class = AutoTestVersionsFilter
-    search_fields = ['versions']
-    ordering_fields = ['create_time']
-
-    @action(methods=['post'], detail=False)
-    def batch_delete(self, request):
-        AutoTestVersions.objects.filter(id__in=request.data.get('ids', [])).delete()
-        return Response({'msg': '删除成功'})
-
-    @action(methods=['get'], detail=False)
-    def creators(self, request):
-        ids = AutoTestVersions.objects.exclude(created_by=None).values_list('created_by', flat=True).distinct()
-        return Response(list(User.objects.filter(id__in=ids).values('id', 'username')))
-
-
 # ── CaseMap ──────────────────────────────────────────────────────────
 
 class CaseMapViewSet(BaseModelViewSet):
@@ -70,11 +48,6 @@ class CaseMapViewSet(BaseModelViewSet):
     filterset_class = CaseMapFilter
     search_fields = ['district_name']
     ordering_fields = ['create_time']
-
-    @action(methods=['post'], detail=False)
-    def batch_delete(self, request):
-        CaseMap.objects.filter(id__in=request.data.get('ids', [])).delete()
-        return Response({'msg': '删除成功'})
 
     @action(methods=['get'], detail=False)
     def creators(self, request):
@@ -92,11 +65,6 @@ class CasePropertyViewSet(BaseModelViewSet):
     filterset_class = CasePropertyFilter
     search_fields = ['sim_scheme_name', 'sim_test_version', 'sim_test_vehicle']
     ordering_fields = ['create_time']
-
-    @action(methods=['post'], detail=False)
-    def batch_delete(self, request):
-        CaseProperty.objects.filter(id__in=request.data.get('ids', [])).delete()
-        return Response({'msg': '删除成功'})
 
     @action(methods=['post'], detail=False, url_path='batch_copy')
     def batch_copy(self, request):
@@ -341,11 +309,6 @@ class SchemeCommonParameterViewSet(BaseModelViewSet):
     search_fields = ['common_parameter_name']
     ordering_fields = ['create_time']
 
-    @action(methods=['post'], detail=False)
-    def batch_delete(self, request):
-        SchemeCommonParameter.objects.filter(id__in=request.data.get('ids', [])).delete()
-        return Response({'msg': '删除成功'})
-
     @action(methods=['post'], detail=False, url_path='batch_copy')
     def batch_copy(self, request):
         items = request.data.get('items', [])
@@ -467,11 +430,6 @@ class CaseTemplateViewSet(BaseModelViewSet):
     search_fields = ['sim_test_version', 'test_module']
     ordering_fields = ['create_time']
 
-    @action(methods=['post'], detail=False)
-    def batch_delete(self, request):
-        CaseTemplate.objects.filter(id__in=request.data.get('ids', [])).delete()
-        return Response({'msg': '删除成功'})
-
     @action(methods=['get'], detail=False)
     def creators(self, request):
         ids = CaseTemplate.objects.exclude(created_by=None).values_list('created_by', flat=True).distinct()
@@ -546,11 +504,6 @@ class AgvTestTaskViewSet(BaseModelViewSet):
                 per_celery.control.revoke(instance.celery_id, terminate=False)
 
         return Response({'msg': '取消请求已发送'})
-
-    @action(methods=['post'], detail=False)
-    def batch_delete(self, request):
-        AgvTestTask.objects.filter(id__in=request.data.get('ids', [])).delete()
-        return Response({'msg': '删除成功'})
 
     @action(methods=['get'], detail=False)
     def creators(self, request):

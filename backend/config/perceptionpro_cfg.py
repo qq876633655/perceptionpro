@@ -8,14 +8,14 @@ File:perceptionpro_cfg.py
 # 开发环境
 ENV = 'dev'
 
+# 平台版本
+PERPRO_VERSION = '2.0.0'
+
 # 数据库名称
 PER_DB_NAME = 'perceptionpro_dev'
 
 # 数据库地址
 PER_DB_HOST = '10.20.24.62'
-
-# 平台版本
-PERPRO_VERSION = '1.0.0'
 
 # 测试用的钉钉群机器人 secret webhook
 TEST_SECRET = "SEC523a1e582932bb5c3eb113a45b6b98f426481558e33dd936dc7898be707fcc6f"
@@ -38,14 +38,13 @@ PD2226_VERSIONS_WEBHOOK = "https://oapi.dingtalk.com/robot/send?access_token=897
                           "4e3ab976c7edd4f36e295377596491c1e0"
 
 # 感知版本发布通知人
-VERSIONS_AT_MOBILES = ['18325815905', '17666076037', '17841711172', '15889657591', '13232121012', '16679001203',
-                       '19960803450']
+VERSIONS_AT_MOBILES = ['18325815905', '16679001203', '13232121012', '19960803450']
 
 # PerPro 内网服务地址
 PER_PRO_LOCAL_SERVER_URL = r"http://10.20.24.62:7898"
 
 # 定位版本发布通知人
-LOC_VERSIONS_AT_MOBILES = ['18325815905', '15526429137', '15052720065']
+LOC_VERSIONS_AT_MOBILES = ['18325815905', '15052720065']
 
 # 定位版本发布钉钉V4项目群机器人 secret webhook
 LOC_VERSIONS_SECRET = "SECcf0b10851f56303b74e5f9f36d469fd338c1db1e5b281b577bf18700651553f2"
@@ -65,7 +64,7 @@ CTL_VERSIONS_SECRET = "SEC4ea83105207ef75b4e7bd2d56ac90608d2bd608797913a12182298
 CTL_VERSIONS_WEBHOOK = "https://oapi.dingtalk.com/robot/send?access_token=f718d2827eda0eca976e255129563f7b2601aa7c199dbf705ced6ad222b1b56b"
 
 # 控制测试人员
-CTL_VERSIONS_AT_MOBILES = ['18325815905', '15526429137', '13430166941']
+CTL_VERSIONS_AT_MOBILES = ['18325815905', '17368811235', '13430166941']
 
 # 微应用配置
 corp_id = "ding93a88f01dc7a5a8735c2f4657eb6378f"
@@ -87,9 +86,15 @@ SEN_VERSIONS_WEBHOOK = "https://oapi.dingtalk.com/robot/send?access_token=1f11a1
 # sensor 测试人员
 SEN_VERSIONS_AT_MOBILES = ['18325815905', '16679001203']
 
-# lyang发布版H5微应用生产环境
+# lyang发布版H5微应用环境
 DD_YL_H5_APPLICATION_CLIENT_ID = "dingntydfi1xlippalms"
 DD_YL_H5_APPLICATION_CLIENT_SECRET = "tnoP1sjoamPGSId72oeeRRn69Yvhb_NaaF7J1cw9PQ8rwHSXdvjuDqO8JDvw53uB"
 
 # lyang发布版H5微应用钉钉机器人
 ROBOT_CODE_TEST_YL = "dingntydfi1xlippalms"
+
+# ── 生产环境覆盖（perceptionpro_cfg_prod.py 不被 git 追踪）────────────
+try:
+    from config.perceptionpro_cfg_prod import *  # noqa
+except ImportError:
+    pass

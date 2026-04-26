@@ -6,7 +6,7 @@
 import unittest
 import requests
 
-BASE_URL = "http://127.0.0.1:8009/api"
+BASE_URL = "http://127.0.0.1:7898/api"
 
 # 超级管理员账号（需在运行前配置）
 SUPERUSER_USERNAME = "admin"

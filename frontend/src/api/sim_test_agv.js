@@ -2,29 +2,6 @@ import request from '@/utils/request'
 import { downloadBlob } from '@/utils/request'
 
 // ════════════════════════════════════════════════════════════
-// AutoTestVersions  /api/at_versions/
-// ════════════════════════════════════════════════════════════
-
-export function getAtVersionsList(params) {
-  return request({ url: '/at_versions/', method: 'get', params })
-}
-export function createAtVersions(data) {
-  return request({ url: '/at_versions/', method: 'post', data })
-}
-export function updateAtVersions(id, data) {
-  return request({ url: `/at_versions/${id}/`, method: 'patch', data })
-}
-export function deleteAtVersions(id) {
-  return request({ url: `/at_versions/${id}/`, method: 'delete' })
-}
-export function batchDeleteAtVersions(ids) {
-  return request({ url: '/at_versions/batch_delete/', method: 'post', data: { ids } })
-}
-export function getAtVersionsCreators() {
-  return request({ url: '/at_versions/creators/', method: 'get' })
-}
-
-// ════════════════════════════════════════════════════════════
 // CaseMap  /api/at_case_map/
 // ════════════════════════════════════════════════════════════
 

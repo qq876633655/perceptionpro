@@ -55,7 +55,51 @@
 
 ---
 
-## 二、项目结构约定
+## 六、钉钉集成工具（`common/`）
+
+### 6.1 `dd_no_login.py` — 钉钉 OAuth2 登录
+
+`DDNoLogin` 类，调用钉钉新 SDK（`alibabacloud_dingtalk`）获取用户信息。
+
+| 方法 | 参数 | 返回 | 说明 |
+|------|------|------|------|
+| `dd_login(authcode)` | 钉钉回调的 `authCode` | `union_id` (str) | 通过授权码获取用户 union_id |
+| `get_user_id(union_id, corp_id)` | 二选一 | `user_id` (str) | 通过 union_id 或 corp_code 查询钉钉 userId，调旧接口 `oapi.dingtalk.com` |
+| `user_info(union_id, corp_id)` | 二选一 | `{dd_user_id, username, phone_number, avatar}` | 获取完整用户信息 |
+
+**配置项**（`config/perceptionpro_cfg.py`）：
+- `DD_H5_APPLICATION_CLIENT_ID`
+- `DD_H5_APPLICATION_CLIENT_SECRET`
+
+**登录流程**：
+```
+钉钉客户端 → GET /dd/no_sign_in/?authCode=xxx
+  → DDNoLogin.dd_login(authcode) 获取 union_id
+  → DDNoLogin.user_info(union_id) 获取 {phone_number, username, dd_user_id, avatar}
+  → 按 phone_number 查询或创建 User（新用户自动分配 visitor 角色，密码 Test123456，is_default_password=True）
+  → HttpResponseRedirect 到 前端 /dd-callback?access=...&refresh=...
+```
+
+> 注意：`dd_login` 是普通 Django view（非 DRF），必须返回 `HttpResponseRedirect`，不能返回 DRF `Response`。  
+> 前端地址当前硬编码为 `http://{hostname}:5173`，生产环境部署前需更改此地址。
+
+---
+
+### 6.2 `dd_robot.py` — 钉钉机器人推送
+
+```python
+dd_h5_robot(user_ids: list[str], msg: dict) -> None
+```
+
+| 参数 | 说明 |
+|------|------|
+| `user_ids` | 钉钉 userId 列表 |
+| `msg` | 消息内容字典，格式必须为 `{"content": "文本"}` |
+
+- 使用 `sampleText` 模板，`msg` 内部自动 `json.dumps()`
+- `ROBOT_CODE` 配置在 `config/perceptionpro_cfg.py`
+- 目前用于向全部有 `dd_user_id` 的 `is_staff` 用户推送角色申请通知
+
 
 ```
 backend/

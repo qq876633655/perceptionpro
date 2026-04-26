@@ -5,6 +5,7 @@ from apps.version_pack.views import (
     CtlEnvViewSet, CtlVersionViewSet,
     SimEnvViewSet, SimVersionViewSet,
     SenEnvViewSet, SenVersionViewSet,
+    AtEnvViewSet, AtVersionViewSet,
 )
 
 router = DefaultRouter()
@@ -18,5 +19,7 @@ router.register('sim_env',     SimEnvViewSet)
 router.register('sim_version', SimVersionViewSet)
 router.register('sen_env',     SenEnvViewSet)
 router.register('sen_version', SenVersionViewSet)
+router.register('at_env',      AtEnvViewSet)
+router.register('at_version',  AtVersionViewSet)
 
 urlpatterns = router.urls

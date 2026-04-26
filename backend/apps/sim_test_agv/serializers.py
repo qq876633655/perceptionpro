@@ -1,17 +1,8 @@
 from rest_framework import serializers
 from apps.sim_test_agv.models import (
-    AutoTestVersions, CaseMap, CaseProperty,
+    CaseMap, CaseProperty,
     SchemeCommonParameter, CaseTemplate, AgvTestTask,
 )
-
-
-class AutoTestVersionsSerializer(serializers.ModelSerializer):
-    created_by_name = serializers.CharField(source='created_by.username', read_only=True, default='')
-    updated_by_name = serializers.CharField(source='updated_by.username', read_only=True, default='')
-
-    class Meta:
-        model = AutoTestVersions
-        fields = '__all__'
 
 
 class CaseMapSerializer(serializers.ModelSerializer):

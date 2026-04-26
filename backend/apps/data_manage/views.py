@@ -26,12 +26,6 @@ class SimProjectPropertyViewSet(BaseModelViewSet):
     search_fields = ['apply_project']
     ordering_fields = ['create_time']
 
-    @action(methods=['post'], detail=False)
-    def batch_delete(self, request):
-        ids = request.data.get('ids', [])
-        SimProjectProperty.objects.filter(id__in=ids).delete()
-        return Response({'msg': '删除成功'})
-
     @action(methods=['get'], detail=False)
     def creators(self, request):
         user_ids = (
@@ -52,12 +46,6 @@ class SimCommonPropertyViewSet(BaseModelViewSet):
     filterset_class = SimCommonPropertyFilter
     search_fields = ['versions']
     ordering_fields = ['create_time']
-
-    @action(methods=['post'], detail=False)
-    def batch_delete(self, request):
-        ids = request.data.get('ids', [])
-        SimCommonProperty.objects.filter(id__in=ids).delete()
-        return Response({'msg': '删除成功'})
 
     @action(methods=['get'], detail=False)
     def creators(self, request):

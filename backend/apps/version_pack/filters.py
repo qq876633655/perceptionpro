@@ -1,5 +1,5 @@
 import django_filters
-from apps.version_pack.models import PerEnv, PerVersion, LocEnv, LocVersion, CtlEnv, CtlVersion, SimEnv, SimVersion, SenEnv, SenVersion
+from apps.version_pack.models import PerEnv, PerVersion, LocEnv, LocVersion, CtlEnv, CtlVersion, SimEnv, SimVersion, SenEnv, SenVersion, AtEnv, AtVersion
 
 
 def make_env_filter(model_cls):
@@ -27,26 +27,8 @@ def make_version_filter(model_cls):
     return _VersionFilter
 
 
-class PerEnvFilter(django_filters.FilterSet):
-    create_time_after = django_filters.DateTimeFilter(field_name="create_time", lookup_expr='gte')
-    create_time_before = django_filters.DateTimeFilter(field_name="create_time", lookup_expr='lte')
-    class Meta:
-        model = PerEnv
-        fields = ['apply_project', 'created_by']
-
-
-class PerVersionFilter(django_filters.FilterSet):
-    versions_type = django_filters.CharFilter(method='filter_versions_type')
-    create_time_after = django_filters.DateTimeFilter(field_name="create_time", lookup_expr='gte')
-    create_time_before = django_filters.DateTimeFilter(field_name="create_time", lookup_expr='lte')
-
-    def filter_versions_type(self, queryset, name, value):
-        return queryset.filter(versions_type__contains=value)
-
-    class Meta:
-        model = PerVersion
-        fields = ['versions_type', 'apply_project', 'env', 'test_result', 'created_by']
-
+PerEnvFilter     = make_env_filter(PerEnv)
+PerVersionFilter = make_version_filter(PerVersion)
 
 LocEnvFilter     = make_env_filter(LocEnv)
 LocVersionFilter = make_version_filter(LocVersion)
@@ -59,3 +41,6 @@ SimVersionFilter = make_version_filter(SimVersion)
 
 SenEnvFilter     = make_env_filter(SenEnv)
 SenVersionFilter = make_version_filter(SenVersion)
+
+AtEnvFilter     = make_env_filter(AtEnv)
+AtVersionFilter = make_version_filter(AtVersion)

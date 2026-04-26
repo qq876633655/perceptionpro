@@ -1,4 +1,4 @@
-import os
+import uuid
 
 from django.db import models
 from django.db.models.signals import post_delete, pre_save
@@ -11,6 +11,7 @@ class BaseEnv(CommonDatetime):
     """
     版本环境控制表
     """
+    uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     env_name = models.CharField(verbose_name="环境名称", unique=True, max_length=128)
     apply_project = models.CharField(verbose_name="适用专项", max_length=16, default='主线版本')
     env_note = models.TextField(verbose_name="环境描述", null=True, blank=True)
@@ -32,6 +33,7 @@ class BaseVersion(CommonDatetime):
     """
     版本控制表
     """
+    uid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     version_num = models.CharField(verbose_name="版本号", max_length=128, unique=True)
     versions_type = models.JSONField(verbose_name="版本类型")
     apply_project = models.CharField(verbose_name="适用专项", max_length=16, default='主线版本')
@@ -50,16 +52,14 @@ class BaseVersion(CommonDatetime):
 # ════════════════════════════════════════════════════════════════════
 
 def per_env_path(instance, filename):
-    return os.path.join('per_env', str(instance.env_name), filename)
-
+    return f'version_pack/per_env/{instance.uid}/{filename}'
 
 class PerEnv(BaseEnv):
     env_file = models.FileField(verbose_name="环境文件", upload_to=per_env_path)
 
 
 def per_version_path(instance, filename):
-    return os.path.join('per_versions', str(instance.version_num), filename)
-
+    return f'version_pack/per_ver/{instance.uid}/{filename}'
 
 class PerVersion(BaseVersion):
     version_file = models.FileField(verbose_name="版本文件", upload_to=per_version_path)
@@ -73,16 +73,14 @@ class PerVersion(BaseVersion):
 # ════════════════════════════════════════════════════════════════════
 
 def loc_env_path(instance, filename):
-    return os.path.join('loc_env', str(instance.env_name), filename)
-
+    return f'version_pack/loc_env/{instance.uid}/{filename}'
 
 class LocEnv(BaseEnv):
     env_file = models.FileField(verbose_name="环境文件", upload_to=loc_env_path)
 
 
 def loc_version_path(instance, filename):
-    return os.path.join('loc_versions', str(instance.version_num), filename)
-
+    return f'version_pack/loc_ver/{instance.uid}/{filename}'
 
 class LocVersion(BaseVersion):
     version_file = models.FileField(verbose_name="版本文件", upload_to=loc_version_path)
@@ -94,16 +92,14 @@ class LocVersion(BaseVersion):
 # ════════════════════════════════════════════════════════════════════
 
 def ctl_env_path(instance, filename):
-    return os.path.join('ctl_env', str(instance.env_name), filename)
-
+    return f'version_pack/ctl_env/{instance.uid}/{filename}'
 
 class CtlEnv(BaseEnv):
     env_file = models.FileField(verbose_name="环境文件", upload_to=ctl_env_path)
 
 
 def ctl_version_path(instance, filename):
-    return os.path.join('ctl_versions', str(instance.version_num), filename)
-
+    return f'version_pack/ctl_ver/{instance.uid}/{filename}'
 
 class CtlVersion(BaseVersion):
     version_file = models.FileField(verbose_name="版本文件", upload_to=ctl_version_path)
@@ -115,16 +111,14 @@ class CtlVersion(BaseVersion):
 # ════════════════════════════════════════════════════════════════════
 
 def sim_env_path(instance, filename):
-    return os.path.join('sim_env', str(instance.env_name), filename)
-
+    return f'version_pack/sim_env/{instance.uid}/{filename}'
 
 class SimEnv(BaseEnv):
     env_file = models.FileField(verbose_name="环境文件", upload_to=sim_env_path)
 
 
 def sim_version_path(instance, filename):
-    return os.path.join('sim_versions', str(instance.version_num), filename)
-
+    return f'version_pack/sim_ver/{instance.uid}/{filename}'
 
 class SimVersion(BaseVersion):
     version_file = models.FileField(verbose_name="版本文件", upload_to=sim_version_path)
@@ -136,20 +130,37 @@ class SimVersion(BaseVersion):
 # ════════════════════════════════════════════════════════════════════
 
 def sen_env_path(instance, filename):
-    return os.path.join('sen_env', str(instance.env_name), filename)
-
+    return f'version_pack/sen_env/{instance.uid}/{filename}'
 
 class SenEnv(BaseEnv):
     env_file = models.FileField(verbose_name="环境文件", upload_to=sen_env_path)
 
 
 def sen_version_path(instance, filename):
-    return os.path.join('sen_versions', str(instance.version_num), filename)
-
+    return f'version_pack/sen_ver/{instance.uid}/{filename}'
 
 class SenVersion(BaseVersion):
     version_file = models.FileField(verbose_name="版本文件", upload_to=sen_version_path)
     env = models.ForeignKey(SenEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True)
+
+
+# ════════════════════════════════════════════════════════════════════
+# 自动化模块  at_*
+# ════════════════════════════════════════════════════════════════════
+
+def at_env_path(instance, filename):
+    return f'version_pack/at_env/{instance.uid}/{filename}'
+
+class AtEnv(BaseEnv):
+    env_file = models.FileField(verbose_name="环境文件", upload_to=at_env_path)
+
+
+def at_version_path(instance, filename):
+    return f'version_pack/at_ver/{instance.uid}/{filename}'
+
+class AtVersion(BaseVersion):
+    version_file = models.FileField(verbose_name="版本文件", upload_to=at_version_path)
+    env = models.ForeignKey(AtEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True)
 
 
 # ════════════════════════════════════════════════════════════════════
@@ -168,6 +179,8 @@ _FILE_SIGNAL_REGISTRY = [
     (SimVersion, ['version_file']),
     (SenEnv, ['env_file']),
     (SenVersion, ['version_file']),
+    (AtEnv, ['env_file']),
+    (AtVersion, ['version_file']),
 ]
 
 

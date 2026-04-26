@@ -67,3 +67,9 @@ per_celery.config_from_object('django.conf:settings', namespace='CELERY')
 
 # 自动发现 Django 应用中的任务
 per_celery.autodiscover_tasks()
+
+# ── 生产环境覆盖（celery_prod.py 不被 git 追踪）────────────────────────
+try:
+    from dev_perceptionpro.celery_prod import *  # noqa
+except ImportError:
+    pass

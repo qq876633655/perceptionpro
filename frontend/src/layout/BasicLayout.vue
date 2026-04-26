@@ -46,6 +46,7 @@
           <el-menu-item index="/versions/ctl">控制版本</el-menu-item>
           <el-menu-item index="/versions/sim">仿真版本</el-menu-item>
           <el-menu-item index="/versions/sen">传感器版本</el-menu-item>
+          <el-menu-item index="/versions/at">自动化版本</el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu index="/data">
@@ -62,7 +63,6 @@
             <el-icon><Cpu /></el-icon>
             <span>整车仿真测试</span>
           </template>
-          <el-menu-item index="/agv-sim/versions">自动化版本</el-menu-item>
           <el-menu-item index="/agv-sim/case-map">地图管理</el-menu-item>
           <el-menu-item index="/agv-sim/case-property">资产管理</el-menu-item>
           <el-menu-item index="/agv-sim/common-parameter">通用参数</el-menu-item>

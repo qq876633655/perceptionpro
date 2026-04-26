@@ -15,8 +15,11 @@
 | POST | `/api/login/` | 无需认证 | 手机号+密码登录，返回 `access`、`refresh`、`user` |
 | POST | `/api/token/` | 无需认证 | DRF SimpleJWT 标准登录（用户名+密码） |
 | POST | `/api/token/refresh/` | 无需认证 | 刷新 access token，body: `{ "refresh": "..." }` |
-| POST | `/api/change_pwd/` | 已登录 | 修改密码，body: `{ "old_password", "new_password" }` |
+| POST | `/api/change_pwd/` | 已登录 | 修改密码，body: `{ "old_password", "new_password" }`，成功后自动将 `is_default_password` 置为 `false` |
 | GET | `/api/me/` | 已登录 | 当前登录用户信息（含角色列表、权限列表） |
+| GET | `/dd/no_sign_in/` | 无需认证 | 钉钉 OAuth2 回调地址，接收 `authCode` 或 `code` 参数，完成登录后重定向到前端 `/dd-callback?access=...&refresh=...` |
+| POST | `/api/avatar/` | 已登录 | 上传头像，multipart 字段名 `avatar`，限制 3MB + 图片类型，存储到 `media/avatar/{user_id}.{ext}` |
+| POST | `/api/role_request/` | 已登录 | 提交角色申请，body: `{ "department": "", "roles": [] }`，通知所有有钉钉账号的管理员 |
 
 ---
 
@@ -36,7 +39,7 @@
 
 | 方法 | 路径 | 权限 | 说明 |
 |------|------|------|------|
-| GET | `/api/groups/` | is_staff 或以上 | 角色列表（含权限详情、成员数） |
+| GET | `/api/groups/` | 已登录 | 角色列表（所有登录用户均可访问，供角色申请弹窗使用） |
 | POST | `/api/groups/` | 超级管理员 | 新建角色 |
 | PATCH | `/api/groups/{id}/` | 超级管理员 | 更新角色（可批量设置权限 IDs） |
 | DELETE | `/api/groups/{id}/` | 超级管理员 | 删除角色 |

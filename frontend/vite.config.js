@@ -30,8 +30,8 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '/api': {
-        target: 'http://10.20.24.62:8009',
-        // target: 'http://10.20.24.62:7898',
+        // target: 'http://10.20.24.62:8009',
+        target: 'http://10.20.24.62:7898',
         changeOrigin: true,
       },
     },

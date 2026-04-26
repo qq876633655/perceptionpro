@@ -13,7 +13,7 @@ import json
 import unittest
 import requests
 
-BASE_URL = "http://127.0.0.1:8009/api"
+BASE_URL = "http://127.0.0.1:7898/api"
 USERNAME = "admin"
 PASSWORD = "admin123"
 

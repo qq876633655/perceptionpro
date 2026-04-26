@@ -35,12 +35,14 @@
 | `is_superuser` | BooleanField | default=False | 超级管理员 |
 | `is_active` | BooleanField | default=True | 是否启用 |
 | `phone_number` | CharField(16) | unique | 手机号，用于登录 |
-| `dd_user_id` | CharField(128) | null, blank | 钉钉 ID |
-| `avatar` | URLField | null, blank | 头像 URL |
+| `dd_user_id` | CharField(128) | null, blank | 钉钉 userId |
+| `avatar` | URLField | null, blank | 头像 URL，存储到 `media/avatar/{id}.{ext}` |
+| `is_default_password` | BooleanField | default=False | 是否使用默认密码，钉钉创建新用户时置 `True`，修改密码后自动置 `False` |
+| `department` | CharField(128) | null, blank | 部门，由用户在申请角色时填写 |
 | `created_by` + `updated_by` | FK → User | 继承自 CommonDatetime |
 | `create_time` / `update_time` | DateTimeField | 继承自 CommonDatetime |
 
-> 登录方式：手机号 + 密码（`PhoneBackend`）或用户名 + 密码（`ModelBackend`）
+> 登录方式：手机号 + 密码（`PhoneBackend`）或用户名 + 密码（`ModelBackend`），或钉钉 OAuth2（`/dd/no_sign_in/`）
 
 ---
 

@@ -1,18 +1,8 @@
 import django_filters
 from apps.sim_test_agv.models import (
-    AutoTestVersions, CaseMap, CaseProperty,
+    CaseMap, CaseProperty,
     SchemeCommonParameter, CaseTemplate, AgvTestTask,
 )
-
-
-class AutoTestVersionsFilter(django_filters.FilterSet):
-    versions = django_filters.CharFilter(lookup_expr='icontains')
-    create_time_after = django_filters.DateTimeFilter(field_name='create_time', lookup_expr='gte')
-    create_time_before = django_filters.DateTimeFilter(field_name='create_time', lookup_expr='lte')
-
-    class Meta:
-        model = AutoTestVersions
-        fields = ['versions', 'created_by']
 
 
 class CaseMapFilter(django_filters.FilterSet):

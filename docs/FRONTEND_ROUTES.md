@@ -17,7 +17,7 @@
   └─ meta.requireStaff = true 且 非 is_staff → 跳 /dashboard
 ```
 
-白名单（无需登录）：`['/login']`
+白名单（无需登录）：`['/login', '/dd-callback']`
 
 ---
 
@@ -28,6 +28,7 @@
 | 路径 | 组件 | meta.title |
 |------|------|------------|
 | `/login` | `views/Login.vue` | 登录 |
+| `/dd-callback` | `views/DingTalkCallback.vue` | 钉钉登录中... |
 
 ### 嵌套在 `BasicLayout` 下
 
@@ -85,7 +86,7 @@
 | `/get-test/agv-body` | GetTestAgvBody | `views/sim_test_get/AgvBodyList.vue` | 车体数据 |
 | `/get-test/common-param` | GetTestCommonParam | `views/sim_test_get/GetTestCommonParamList.vue` | 测试通参 |
 
-> 未匹配路由（`/:pathMatch(.*)*`）自动重定向到 `/`
+> 未匹配路由（`/:pathMatch(.*)*`）在 `BasicLayout` 内展示 `views/NotFound.vue`，保留侧边栏和顶栏，并显示返回首页按钮。
 
 ---
 

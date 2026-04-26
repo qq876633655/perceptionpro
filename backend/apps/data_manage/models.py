@@ -7,7 +7,7 @@ from apps.common_views.models import CommonDatetime
 
 
 def project_property_path(instance, filename):
-    return os.path.join('sim_project_property', str(instance.uid), filename)
+    return os.path.join('data_manage', 'sim_project_property', str(instance.uid), filename)
 
 
 class SimProjectProperty(CommonDatetime):
@@ -41,7 +41,7 @@ def _sim_project_property_delete_file(sender, instance, **kwargs):
 
 
 def common_property_path(instance, filename):
-    return os.path.join('sim_common_property', str(instance.uid), filename)
+    return os.path.join('data_manage', 'sim_common_property', str(instance.uid), filename)
 
 
 class SimCommonProperty(CommonDatetime):

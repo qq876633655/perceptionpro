@@ -1,3 +1,5 @@
+import logging
+
 from common.dd_no_login import DDNoLogin
 from django.contrib.auth import authenticate
 from django.http import HttpResponseRedirect
@@ -19,6 +21,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
 from rest_framework.decorators import action
 from django.contrib.auth.models import Group, Permission
+import config.perceptionpro_cfg as ppc
+
+audit_log = logging.getLogger('apps.audit')
 
 
 class UserViewSet(BaseModelViewSet):
@@ -43,7 +48,7 @@ class UserViewSet(BaseModelViewSet):
         # 显式清理 M2M 关联，避免 MySQL 外键约束与 ORM collector 顺序冲突
         instance.groups.clear()
         instance.user_permissions.clear()
-        instance.delete()
+        super().perform_destroy(instance)
 
 
 # 只暴露业务 app 的权限，过滤掉 Django 内置 app
@@ -100,12 +105,17 @@ class LoginView(APIView):
 
         user = authenticate(request, phone_number=phone, password=password)
 
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR', '')
+        ip = x_forwarded_for.split(',')[0].strip() if x_forwarded_for else request.META.get('REMOTE_ADDR', '-')
         if user is None:
+            audit_log.warning('登录失败 手机号=%s IP=%s', phone, ip)
             return APIResponse(msg="手机号或密码错误", code=1002, status=status.HTTP_400_BAD_REQUEST)
 
         if not user.is_active:
+            audit_log.warning('登录失败(已禁用) 用户=%s IP=%s', user.username, ip)
             return APIResponse(msg="用户已被禁用", code=1003, status=status.HTTP_400_BAD_REQUEST)
 
+        audit_log.info('登录成功 用户=%s IP=%s', user.username, ip)
         refresh = RefreshToken.for_user(user)
 
         return APIResponse(data={
@@ -145,8 +155,9 @@ class ChangePasswordView(APIView):
 
 
 def dd_login(request):
-    hostname = request.get_host().split(":")[0]
-    frontend_url = f"http://{hostname}:5173"
+    # hostname = request.get_host().split(":")[0]
+    # frontend_url = f"http://{hostname}:5173"
+    frontend_url = ppc.PER_PRO_LOCAL_SERVER_URL
 
     authcode = request.GET.get("authCode")
     get_code = request.GET.get("code")

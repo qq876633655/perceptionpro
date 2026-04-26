@@ -174,15 +174,50 @@ async function handleSubmit() {
 </template>
 ```
 
-| 方法/属性 | 说明 |
-|-----------|------|
-| `serverErrors` | `Ref<{fieldName: errorMsg}>` - 直接绑定到 `el-form-item :error` |
-| `applyServerErrors(errors)` | 接收后端 `data` 数组，写入 serverErrors |
-| `clearServerErrors()` | 清空所有错误，通常在 Dialog 打开时调用 |
+## 五、`NotFound.vue`（`src/views/NotFound.vue`）
+
+404 页面，嵌套在 `BasicLayout` 下，保留侧边栏和顶栏。
+
+- 显示品牌红大字 **404** + 说明文字
+- 提供「返回首页」按钮，跳转到 `/`
+- 由路由 `/:pathMatch(.*)*` 兜底匹配自动展示，无需手动引用
 
 ---
 
-## 四、`usePermission`（`src/composables/usePermission.js`）
+## 六、`BasicLayout.vue`（`src/layout/BasicLayout.vue`）
+
+全局主布局，除登录/回调页外所有路由的父容器。
+
+### 侧边栏
+
+| 特性 | 说明 |
+|------|------|
+| 配色 | 背景 `#f0f2f5`，文字 `#303133`，边框 `#e0e3e8` |
+| 激活高亮 | `:deep(.el-menu-item.is-active)` → `background-color: #1890ff` |
+| 折叠 | `isCollapsed` ref 控制，宽度 `220px` ↔ `64px`，动画 0.3s |
+| Logo 折叠过渡 | 文字用 `<Transition name="logo-fade">` 包裹，淡出 0.15s；折叠时 logo 区 padding 收为 0 使图标自动居中 |
+
+### 顶栏（Header）
+
+- `position: sticky; top: 0; z-index: 10`，页面内容滚动时始终可见
+- 右侧头像点击触发隐藏 `<input type="file">` 实现头像上传（3MB 限制）
+- 下拉菜单：修改密码 / 退出登录
+
+### 面包屑
+
+由路由 `meta.title`、`meta.parentTitle`、`meta.parentPath` 自动生成，无需手动维护。
+
+### 自动弹出修改密码
+
+```js
+watch(() => authStore.userInfo?.is_default_password, (val) => {
+  if (val) changePwdVisible.value = true
+}, { immediate: true })
+```
+
+用户首次通过钉钉登录（默认密码 `Test123456`）时，进入主界面后自动弹出修改密码对话框。
+
+---
 
 在逻辑层（非模板）判断权限，通常用于条件性执行代码。
 

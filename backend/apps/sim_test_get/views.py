@@ -32,11 +32,6 @@ class GetTestTargetViewSet(BaseModelViewSet):
     search_fields = ['target_name', 'model_name']
     ordering_fields = ['create_time']
 
-    @action(methods=['post'], detail=False)
-    def batch_delete(self, request):
-        GetTestTarget.objects.filter(id__in=request.data.get('ids', [])).delete()
-        return Response({'msg': '删除成功'})
-
     @action(methods=['get'], detail=False)
     def creators(self, request):
         ids = GetTestTarget.objects.exclude(created_by=None).values_list('created_by', flat=True).distinct()
@@ -54,11 +49,6 @@ class AgvBodyViewSet(BaseModelViewSet):
     search_fields = ['agv_type']
     ordering_fields = ['create_time']
 
-    @action(methods=['post'], detail=False)
-    def batch_delete(self, request):
-        AgvBody.objects.filter(id__in=request.data.get('ids', [])).delete()
-        return Response({'msg': '删除成功'})
-
     @action(methods=['get'], detail=False)
     def creators(self, request):
         ids = AgvBody.objects.exclude(created_by=None).values_list('created_by', flat=True).distinct()
@@ -75,11 +65,6 @@ class GetTestCommonParameterViewSet(BaseModelViewSet):
     filterset_class = GetTestCommonParameterFilter
     search_fields = ['common_parameter_name']
     ordering_fields = ['create_time']
-
-    @action(methods=['post'], detail=False)
-    def batch_delete(self, request):
-        GetTestCommonParameter.objects.filter(id__in=request.data.get('ids', [])).delete()
-        return Response({'msg': '删除成功'})
 
     @action(methods=['get'], detail=False)
     def creators(self, request):
