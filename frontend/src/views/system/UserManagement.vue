@@ -75,9 +75,14 @@
         </el-table-column>
         <el-table-column label="账号状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="row.is_active ? 'success' : 'danger'" size="small">
+            <el-button
+              :type="row.is_active ? 'success' : 'danger'"
+              size="small"
+              :loading="!!toggling[row.id]"
+              @click="toggleActive(row)"
+            >
               {{ row.is_active ? '正常' : '禁用' }}
-            </el-tag>
+            </el-button>
           </template>
         </el-table-column>
         <el-table-column prop="create_time" label="创建时间" width="170">
@@ -125,10 +130,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search, Refresh, Plus } from '@element-plus/icons-vue'
-import { getUserList, deleteUser, getGroupList } from '@/api/admin'
+import { getUserList, deleteUser, updateUser, getGroupList } from '@/api/admin'
 import { usePagination } from '@/composables/usePagination'
 import { useAuthStore } from '@/stores/auth'
 import UserFormDialog from './UserFormDialog.vue'
@@ -192,6 +197,21 @@ function openCreateDialog() {
 function openEditDialog(row) {
   editRow.value = { ...row }
   dialogVisible.value = true
+}
+
+// 账号状态切换
+const toggling = reactive({})
+async function toggleActive(row) {
+  if (toggling[row.id]) return
+  toggling[row.id] = true
+  try {
+    await updateUser(row.id, { is_active: !row.is_active })
+    row.is_active = !row.is_active
+  } catch {
+    // 错误已在拦截器中统一提示
+  } finally {
+    toggling[row.id] = false
+  }
 }
 
 function formatTime(t) {

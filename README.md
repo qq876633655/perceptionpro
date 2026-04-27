@@ -84,6 +84,8 @@ server {
     root /home/user/deploy/perceptionpro/frontend/dist;
     index index.html;
 
+    client_max_body_size 0;      # 不限制上传大小（由 Django/Gunicorn 控制）
+
     # Vue router history 模式
     location / {
         try_files $uri $uri/ /index.html;
@@ -94,7 +96,9 @@ server {
         proxy_pass http://127.0.0.1:8010;
         proxy_set_header Host $host:$server_port;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_read_timeout 120;
+        proxy_read_timeout 7200;    # 2 小时，支持大文件上传
+        proxy_send_timeout 7200;
+        proxy_request_buffering off;  # 关闭请求缓冲，大文件直接流式转发给 gunicorn
     }
 
     # 钉钉回调代理到 gunicorn（/dd/no_sign_in/ 不在 /api/ 前缀下）
@@ -136,6 +140,7 @@ Environment="PATH=/home/user/miniconda3/envs/py312/bin"
 ExecStart=/home/user/miniconda3/envs/py312/bin/gunicorn dev_perceptionpro.wsgi:application \
     --bind 127.0.0.1:8010 \
     --workers 4 \
+    --timeout 7200 \
     --pid /home/user/deploy/perceptionpro/gunicorn.pid \
     --access-logfile /home/user/deploy/perceptionpro/backend/logs/gunicorn_access.log \
     --error-logfile /home/user/deploy/perceptionpro/backend/logs/gunicorn_error.log

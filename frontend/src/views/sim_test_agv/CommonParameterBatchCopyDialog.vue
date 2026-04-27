@@ -29,7 +29,22 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column prop="sim_test_version" label="资产版本" min-width="130" />
+      <el-table-column label="资产版本 *" min-width="160">
+        <template #default="{ row, $index }">
+          <el-input
+            v-model="row.newVersion"
+            placeholder="请输入资产版本"
+            :disabled="loading"
+            size="small"
+            :status="versionErrors[$index] ? 'error' : ''"
+            @blur="validateVersionRow($index)"
+            @input="clearVersionError($index)"
+          />
+          <div v-if="versionErrors[$index]" style="color:#f56c6c;font-size:12px;margin-top:2px">
+            {{ versionErrors[$index] }}
+          </div>
+        </template>
+      </el-table-column>
       <el-table-column prop="sim_test_vehicle" label="测试车型" min-width="110" />
     </el-table>
 
@@ -54,10 +69,11 @@ const emit = defineEmits(['update:visible', 'success'])
 const visible = computed({ get: () => props.visible, set: v => emit('update:visible', v) })
 const loading = ref(false)
 
-// 每行编辑状态：含 newName + 原始字段
+// 每行编辑状态：含 newName + newVersion + 原始字段
 const editItems = ref([])
 // 每行错误信息
 const nameErrors = ref([])
+const versionErrors = ref([])
 // 已有通参名称集合（从 choices 接口加载）
 const existingNames = ref(new Set())
 
@@ -66,6 +82,7 @@ watch(() => props.visible, val => {
   // 关闭时重置
   editItems.value = []
   nameErrors.value = []
+  versionErrors.value = []
 })
 
 async function handleOpened() {
@@ -73,11 +90,12 @@ async function handleOpened() {
   editItems.value = props.rows.map(r => ({
     id: r.id,
     newName: r.common_parameter_name,
-    sim_test_version: r.sim_test_version,
+    newVersion: r.sim_test_version,
     sim_test_vehicle: r.sim_test_vehicle,
     common_parameter_name: r.common_parameter_name,
   }))
   nameErrors.value = props.rows.map(() => '')
+  versionErrors.value = props.rows.map(() => '')
 
   // 加载已有名称
   try {
@@ -92,6 +110,7 @@ async function handleOpened() {
 function handleClosed() {
   editItems.value = []
   nameErrors.value = []
+  versionErrors.value = []
 }
 
 function validateRow(idx) {
@@ -119,11 +138,26 @@ function clearError(idx) {
   nameErrors.value[idx] = ''
 }
 
+function validateVersionRow(idx) {
+  const v = (editItems.value[idx]?.newVersion || '').trim()
+  if (!v) {
+    versionErrors.value[idx] = '资产版本不能为空'
+    return false
+  }
+  versionErrors.value[idx] = ''
+  return true
+}
+
+function clearVersionError(idx) {
+  versionErrors.value[idx] = ''
+}
+
 async function handleSubmit() {
   // 全量校验
   let valid = true
   editItems.value.forEach((_, idx) => {
     if (!validateRow(idx)) valid = false
+    if (!validateVersionRow(idx)) valid = false
   })
   if (!valid) {
     ElMessage.warning('请修正表格中的错误后再提交')
@@ -135,6 +169,7 @@ async function handleSubmit() {
     const items = editItems.value.map(r => ({
       id: r.id,
       common_parameter_name: r.newName.trim(),
+      sim_test_version: r.newVersion.trim(),
     }))
     await batchCopyCommonParameters(items)
     ElMessage.success('复制成功')
