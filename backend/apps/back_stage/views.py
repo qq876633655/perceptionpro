@@ -157,7 +157,7 @@ class ChangePasswordView(APIView):
 def dd_login(request):
     # hostname = request.get_host().split(":")[0]
     # frontend_url = f"http://{hostname}:5173"
-    frontend_url = ppc.PER_PRO_LOCAL_SERVER_URL
+    frontend_url = ppc.PER_PRO_FRONTEND_URL
 
     authcode = request.GET.get("authCode")
     get_code = request.GET.get("code")

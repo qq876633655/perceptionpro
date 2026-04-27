@@ -213,7 +213,7 @@ backend/media
 .idea
 **/logs/*
 !**/logs/__init__.py
-# 生产环境覆盖配置（仅存在于生产服务器，不入库）
+backend/demo/*
 backend/dev_perceptionpro/local_settings.py
 backend/dev_perceptionpro/celery_prod.py
 backend/config/perceptionpro_cfg_prod.py

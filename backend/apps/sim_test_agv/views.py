@@ -8,7 +8,7 @@ from django.db import transaction
 from django.http import StreamingHttpResponse
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth import get_user_model
@@ -504,6 +504,26 @@ class AgvTestTaskViewSet(BaseModelViewSet):
                 per_celery.control.revoke(instance.celery_id, terminate=False)
 
         return Response({'msg': '取消请求已发送'})
+
+    @action(methods=['post'], detail=True, url_path='upload_test_result', permission_classes=[AllowAny])
+    def upload_test_result(self, request, pk=None):
+        """Worker 回调：上传测试结果文件到 test_result 字段（无需登录）"""
+        instance = self.get_object()
+        file = request.FILES.get('file')
+        if not file:
+            return Response({'detail': '未收到文件'}, status=400)
+        instance.test_result.save(file.name, file, save=True)
+        return Response({'msg': '上传成功', 'path': instance.test_result.name})
+
+    @action(methods=['post'], detail=True, url_path='upload_run_log', permission_classes=[AllowAny])
+    def upload_run_log(self, request, pk=None):
+        """Worker 回调：上传运行日志文件到 auto_test_run_log 字段（无需登录）"""
+        instance = self.get_object()
+        file = request.FILES.get('file')
+        if not file:
+            return Response({'detail': '未收到文件'}, status=400)
+        instance.auto_test_run_log.save(file.name, file, save=True)
+        return Response({'msg': '上传成功', 'path': instance.auto_test_run_log.name})
 
     @action(methods=['get'], detail=False)
     def creators(self, request):

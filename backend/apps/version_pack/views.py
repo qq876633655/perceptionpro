@@ -39,6 +39,7 @@ _FILTER_BACKENDS    = [DjangoFilterBackend, SearchFilter, OrderingFilter]
 # ════════════════════════════════════════════════════════════════════
 
 def make_env_viewset(env_model, env_serializer, env_filter, search_fields=None):
+    _search_fields = search_fields or ['env_name']
     class _EnvViewSet(BaseModelViewSet):
         queryset = env_model.objects.all().order_by('-create_time')
         serializer_class = env_serializer
@@ -46,9 +47,7 @@ def make_env_viewset(env_model, env_serializer, env_filter, search_fields=None):
         filter_backends = _FILTER_BACKENDS
         filterset_class = env_filter
         ordering_fields = ['create_time']
-
-        def get_search_fields(self):
-            return search_fields or ['env_name']
+        search_fields = _search_fields
 
         @action(methods=['get'], detail=False)
         def creators(self, request):
@@ -61,15 +60,14 @@ def make_env_viewset(env_model, env_serializer, env_filter, search_fields=None):
 
 
 def make_version_viewset(ver_model, create_ser, update_ser, list_ser, ver_filter, search_fields=None, notify_fn=None):
+    _search_fields = search_fields or ['version_num']
     class _VersionViewSet(BaseModelViewSet):
         queryset = ver_model.objects.all().order_by('-create_time')
         permission_classes = _COMMON_PERMISSIONS
         filter_backends = _FILTER_BACKENDS
         filterset_class = ver_filter
         ordering_fields = ['create_time']
-
-        def get_search_fields(self):
-            return search_fields or ['version_num']
+        search_fields = _search_fields
 
         def get_serializer_class(self):
             if self.action == 'create':
