@@ -4,10 +4,21 @@ from rest_framework.response import Response
 from rest_framework.views import exception_handler
 from rest_framework.exceptions import ValidationError, AuthenticationFailed, PermissionDenied, NotAuthenticated
 from rest_framework.renderers import JSONRenderer
+import logging
+
+_log = logging.getLogger('apps')
 
 
 def custom_exception_handler(exc, context):
     response = exception_handler(exc, context)
+
+    # 记录经过 DRF 的异常（DEBUG 级别，排查用）
+    _log.debug(
+        '[DRF exception] %s: %s | view=%s | status=%s',
+        type(exc).__name__, exc,
+        context.get('view').__class__.__name__ if context.get('view') else '-',
+        response.status_code if response else 'no-response',
+    )
 
     code = 5000
     msg = "服务器异常"

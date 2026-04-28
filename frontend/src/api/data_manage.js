@@ -14,12 +14,18 @@ export function getSimProjectPropertyCreators() {
   return request({ url: '/sim_project_property/creators/', method: 'get' })
 }
 
-export function createSimProjectProperty(data) {
-  return request({ url: '/sim_project_property/', method: 'post', data })
+export function createSimProjectProperty(data, onProgress) {
+  return request({
+    url: '/sim_project_property/', method: 'post', data,
+    ...(onProgress && { onUploadProgress: (e) => e.total && onProgress(Math.round(e.loaded * 100 / e.total)) }),
+  })
 }
 
-export function updateSimProjectProperty(id, data) {
-  return request({ url: `/sim_project_property/${id}/`, method: 'patch', data })
+export function updateSimProjectProperty(id, data, onProgress) {
+  return request({
+    url: `/sim_project_property/${id}/`, method: 'patch', data,
+    ...(onProgress && { onUploadProgress: (e) => e.total && onProgress(Math.round(e.loaded * 100 / e.total)) }),
+  })
 }
 
 export function deleteSimProjectProperty(id) {
@@ -43,12 +49,18 @@ export function getSimCommonPropertyCreators() {
   return request({ url: '/sim_common_property/creators/', method: 'get' })
 }
 
-export function createSimCommonProperty(data) {
-  return request({ url: '/sim_common_property/', method: 'post', data })
+export function createSimCommonProperty(data, onProgress) {
+  return request({
+    url: '/sim_common_property/', method: 'post', data,
+    ...(onProgress && { onUploadProgress: (e) => e.total && onProgress(Math.round(e.loaded * 100 / e.total)) }),
+  })
 }
 
-export function updateSimCommonProperty(id, data) {
-  return request({ url: `/sim_common_property/${id}/`, method: 'patch', data })
+export function updateSimCommonProperty(id, data, onProgress) {
+  return request({
+    url: `/sim_common_property/${id}/`, method: 'patch', data,
+    ...(onProgress && { onUploadProgress: (e) => e.total && onProgress(Math.round(e.loaded * 100 / e.total)) }),
+  })
 }
 
 export function deleteSimCommonProperty(id) {

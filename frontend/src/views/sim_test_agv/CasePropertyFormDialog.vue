@@ -271,9 +271,9 @@ async function handleSubmit() {
     if (selectedWbtFile) fd.append('wbt_file', selectedWbtFile)
 
     if (isEdit.value) {
-      await updateCaseProperty(savedId, fd)
+      await updateCaseProperty(savedId, fd, (p) => backupFileRef.value?.setProgress(p))
     } else {
-      const res = await createCaseProperty(fd)
+      const res = await createCaseProperty(fd, (p) => backupFileRef.value?.setProgress(p))
       savedId = res.data?.id ?? res.id
     }
 

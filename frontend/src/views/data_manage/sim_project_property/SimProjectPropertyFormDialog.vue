@@ -156,7 +156,7 @@ async function handleSubmit() {
           property_desc: form.property_desc,
         }
       }
-      await updateSimProjectProperty(props.editData.id, payload)
+      await updateSimProjectProperty(props.editData.id, payload, (p) => uploaderRef.value?.setProgress(p))
       ElMessage.success('更新成功')
     } else {
       const formData = new FormData()
@@ -164,7 +164,7 @@ async function handleSubmit() {
       if (form.property_tag) formData.append('property_tag', form.property_tag)
       if (form.property_desc) formData.append('property_desc', form.property_desc)
       formData.append('project_property', selectedFile.value)
-      await createSimProjectProperty(formData)
+      await createSimProjectProperty(formData, (p) => uploaderRef.value?.setProgress(p))
       ElMessage.success('创建成功')
     }
     emit('success')

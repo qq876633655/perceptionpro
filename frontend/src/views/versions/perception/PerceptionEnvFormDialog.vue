@@ -180,7 +180,7 @@ async function handleSubmit() {
           env_note: form.env_note,
         }
       }
-      await updateEnv(props.editData.id, payload)
+      await updateEnv(props.editData.id, payload, (p) => uploaderRef.value?.setProgress(p))
       ElMessage.success('更新成功')
     } else {
       const formData = new FormData()
@@ -188,7 +188,7 @@ async function handleSubmit() {
       formData.append('apply_project', form.apply_project)
       if (form.env_note) formData.append('env_note', form.env_note)
       formData.append('env_file', selectedFile.value)
-      await createEnv(formData)
+      await createEnv(formData, (p) => uploaderRef.value?.setProgress(p))
       ElMessage.success('创建成功')
     }
     emit('success')

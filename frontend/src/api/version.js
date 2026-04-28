@@ -26,8 +26,11 @@ export function getVersion(id) {
 }
 
 /** 创建版本（不含 test_result / test_verdict） */
-export function createVersion(data) {
-  return request({ url: '/per_version/', method: 'post', data })
+export function createVersion(data, onProgress) {
+  return request({
+    url: '/per_version/', method: 'post', data,
+    ...(onProgress && { onUploadProgress: (e) => e.total && onProgress(Math.round(e.loaded * 100 / e.total)) }),
+  })
 }
 
 /**
@@ -35,8 +38,11 @@ export function createVersion(data) {
  * 可更新：versions_type / apply_project / dev_test_result /
  *         database_file / test_result / test_verdict / env
  */
-export function updateVersion(id, data) {
-  return request({ url: `/per_version/${id}/`, method: 'patch', data })
+export function updateVersion(id, data, onProgress) {
+  return request({
+    url: `/per_version/${id}/`, method: 'patch', data,
+    ...(onProgress && { onUploadProgress: (e) => e.total && onProgress(Math.round(e.loaded * 100 / e.total)) }),
+  })
 }
 
 /** 删除单个版本 */
@@ -112,13 +118,19 @@ export function getEnv(id) {
 }
 
 /** 创建环境 */
-export function createEnv(data) {
-  return request({ url: '/per_env/', method: 'post', data })
+export function createEnv(data, onProgress) {
+  return request({
+    url: '/per_env/', method: 'post', data,
+    ...(onProgress && { onUploadProgress: (e) => e.total && onProgress(Math.round(e.loaded * 100 / e.total)) }),
+  })
 }
 
 /** 更新环境 */
-export function updateEnv(id, data) {
-  return request({ url: `/per_env/${id}/`, method: 'patch', data })
+export function updateEnv(id, data, onProgress) {
+  return request({
+    url: `/per_env/${id}/`, method: 'patch', data,
+    ...(onProgress && { onUploadProgress: (e) => e.total && onProgress(Math.round(e.loaded * 100 / e.total)) }),
+  })
 }
 
 /** 删除环境 */
@@ -168,20 +180,24 @@ export function uploadEnvFile(id, formData, onProgress) {
 // ════════════════════════════════════════════════════════════════════
 
 function makeModuleApi(prefix) {
+  const _req = (cfg, onProgress) => request({
+    ...cfg,
+    ...(onProgress && { onUploadProgress: (e) => e.total && onProgress(Math.round(e.loaded * 100 / e.total)) }),
+  })
   return {
-    getVersionList:      (params)    => request({ url: `/${prefix}_version/`, method: 'get', params }),
-    getVersionCreators:  ()          => request({ url: `/${prefix}_version/creators/`, method: 'get' }),
-    createVersion:       (data)      => request({ url: `/${prefix}_version/`, method: 'post', data }),
-    updateVersion:       (id, data)  => request({ url: `/${prefix}_version/${id}/`, method: 'patch', data }),
-    deleteVersion:       (id)        => request({ url: `/${prefix}_version/${id}/`, method: 'delete' }),
-    batchDeleteVersions: (ids)       => request({ url: `/${prefix}_version/batch_delete/`, method: 'post', data: { ids } }),
+    getVersionList:      (params)       => request({ url: `/${prefix}_version/`, method: 'get', params }),
+    getVersionCreators:  ()             => request({ url: `/${prefix}_version/creators/`, method: 'get' }),
+    createVersion:       (data, onPrg)  => _req({ url: `/${prefix}_version/`, method: 'post', data }, onPrg),
+    updateVersion:       (id, data, onPrg) => _req({ url: `/${prefix}_version/${id}/`, method: 'patch', data }, onPrg),
+    deleteVersion:       (id)           => request({ url: `/${prefix}_version/${id}/`, method: 'delete' }),
+    batchDeleteVersions: (ids)          => request({ url: `/${prefix}_version/batch_delete/`, method: 'post', data: { ids } }),
 
-    getEnvList:          (params)    => request({ url: `/${prefix}_env/`, method: 'get', params }),
-    getEnvCreators:      ()          => request({ url: `/${prefix}_env/creators/`, method: 'get' }),
-    createEnv:           (data)      => request({ url: `/${prefix}_env/`, method: 'post', data }),
-    updateEnv:           (id, data)  => request({ url: `/${prefix}_env/${id}/`, method: 'patch', data }),
-    deleteEnv:           (id)        => request({ url: `/${prefix}_env/${id}/`, method: 'delete' }),
-    batchDeleteEnvs:     (ids)       => request({ url: `/${prefix}_env/batch_delete/`, method: 'post', data: { ids } }),
+    getEnvList:          (params)       => request({ url: `/${prefix}_env/`, method: 'get', params }),
+    getEnvCreators:      ()             => request({ url: `/${prefix}_env/creators/`, method: 'get' }),
+    createEnv:           (data, onPrg)  => _req({ url: `/${prefix}_env/`, method: 'post', data }, onPrg),
+    updateEnv:           (id, data, onPrg) => _req({ url: `/${prefix}_env/${id}/`, method: 'patch', data }, onPrg),
+    deleteEnv:           (id)           => request({ url: `/${prefix}_env/${id}/`, method: 'delete' }),
+    batchDeleteEnvs:     (ids)          => request({ url: `/${prefix}_env/batch_delete/`, method: 'post', data: { ids } }),
   }
 }
 

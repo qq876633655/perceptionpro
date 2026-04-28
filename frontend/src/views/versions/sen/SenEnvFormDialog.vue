@@ -96,7 +96,7 @@ async function handleSubmit() {
       } else {
         payload = { apply_project: form.apply_project, env_note: form.env_note }
       }
-      await senApi.updateEnv(props.editData.id, payload)
+      await senApi.updateEnv(props.editData.id, payload, (p) => uploaderRef.value?.setProgress(p))
       ElMessage.success('更新成功')
     } else {
       const fd = new FormData()
@@ -104,7 +104,7 @@ async function handleSubmit() {
       fd.append('apply_project', form.apply_project)
       if (form.env_note) fd.append('env_note', form.env_note)
       fd.append('env_file', selectedFile.value)
-      await senApi.createEnv(fd)
+      await senApi.createEnv(fd, (p) => uploaderRef.value?.setProgress(p))
       ElMessage.success('创建成功')
     }
     emit('success')

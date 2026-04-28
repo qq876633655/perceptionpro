@@ -27,6 +27,10 @@ service.interceptors.request.use(
     if (authStore.token) {
       config.headers['Authorization'] = `Bearer ${authStore.token}`
     }
+    // 文件上传不限超时
+    if (config.data instanceof FormData) {
+      config.timeout = 0
+    }
     return config
   },
   (error) => Promise.reject(error),

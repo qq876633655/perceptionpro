@@ -35,15 +35,15 @@ EOF
 # ② 业务配置覆盖
 cat > /home/user/deploy/perceptionpro/backend/config/perceptionpro_cfg_prod.py << 'EOF'
 ENV = 'prod'
-PER_DB_NAME = 'perceptionpro'
-PER_DB_HOST = '127.0.0.1'
-PER_PRO_LOCAL_SERVER_URL = 'http://10.20.24.62:7898'
+PER_DB_NAME = 'perceptionpro_prod'
+PER_PRO_LOCAL_SERVER_URL = r'http://10.20.24.62:7898'
+PER_PRO_FRONTEND_URL = r'http://10.20.24.62:7898'
 EOF
 
 # ③ Celery 覆盖
 cat > /home/user/deploy/perceptionpro/backend/dev_perceptionpro/celery_prod.py << 'EOF'
 # 只定义变量，由 celery.py 读取应用，不做任何 import
-BROKER_URL = 'redis://127.0.0.1:6379/0'
+BROKER_URL = 'redis://127.0.0.1:6380/0'
 EOF
 ```
 

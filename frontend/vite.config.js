@@ -33,6 +33,8 @@ export default defineConfig({
         target: 'http://10.20.24.62:8009',
         // target: 'http://10.20.24.62:7898',
         changeOrigin: true,
+        proxyTimeout: 0,       // 不限制等待后端响应的超时（默认 120s）
+        timeout: 0,            // 不限制与后端建立连接的超时
       },
     },
   },

@@ -8,11 +8,11 @@ import { downloadBlob } from '@/utils/request'
 export function getCaseMapList(params) {
   return request({ url: '/at_case_map/', method: 'get', params })
 }
-export function createCaseMap(data) {
-  return request({ url: '/at_case_map/', method: 'post', data })
+export function createCaseMap(data, onProgress) {
+  return request({ url: '/at_case_map/', method: 'post', data, ...(onProgress && { onUploadProgress: (e) => e.total && onProgress(Math.round(e.loaded * 100 / e.total)) }) })
 }
-export function updateCaseMap(id, data) {
-  return request({ url: `/at_case_map/${id}/`, method: 'patch', data })
+export function updateCaseMap(id, data, onProgress) {
+  return request({ url: `/at_case_map/${id}/`, method: 'patch', data, ...(onProgress && { onUploadProgress: (e) => e.total && onProgress(Math.round(e.loaded * 100 / e.total)) }) })
 }
 export function deleteCaseMap(id) {
   return request({ url: `/at_case_map/${id}/`, method: 'delete' })
@@ -35,11 +35,11 @@ export function getCaseMapOptions() {
 export function getCasePropertyList(params) {
   return request({ url: '/at_case_property/', method: 'get', params })
 }
-export function createCaseProperty(data) {
-  return request({ url: '/at_case_property/', method: 'post', data })
+export function createCaseProperty(data, onProgress) {
+  return request({ url: '/at_case_property/', method: 'post', data, ...(onProgress && { onUploadProgress: (e) => e.total && onProgress(Math.round(e.loaded * 100 / e.total)) }) })
 }
-export function updateCaseProperty(id, data) {
-  return request({ url: `/at_case_property/${id}/`, method: 'patch', data })
+export function updateCaseProperty(id, data, onProgress) {
+  return request({ url: `/at_case_property/${id}/`, method: 'patch', data, ...(onProgress && { onUploadProgress: (e) => e.total && onProgress(Math.round(e.loaded * 100 / e.total)) }) })
 }
 export function deleteCaseProperty(id) {
   return request({ url: `/at_case_property/${id}/`, method: 'delete' })
@@ -81,11 +81,11 @@ export function getCasePropertyChoices() {
 export function getCommonParameterList(params) {
   return request({ url: '/at_common_parameter/', method: 'get', params })
 }
-export function createCommonParameter(data) {
-  return request({ url: '/at_common_parameter/', method: 'post', data })
+export function createCommonParameter(data, onProgress) {
+  return request({ url: '/at_common_parameter/', method: 'post', data, ...(onProgress && { onUploadProgress: (e) => e.total && onProgress(Math.round(e.loaded * 100 / e.total)) }) })
 }
-export function updateCommonParameter(id, data) {
-  return request({ url: `/at_common_parameter/${id}/`, method: 'patch', data })
+export function updateCommonParameter(id, data, onProgress) {
+  return request({ url: `/at_common_parameter/${id}/`, method: 'patch', data, ...(onProgress && { onUploadProgress: (e) => e.total && onProgress(Math.round(e.loaded * 100 / e.total)) }) })
 }
 export function deleteCommonParameter(id) {
   return request({ url: `/at_common_parameter/${id}/`, method: 'delete' })
@@ -111,11 +111,11 @@ export function getCommonParameterChoices() {
 export function getCaseTemplateList(params) {
   return request({ url: '/at_case_template/', method: 'get', params })
 }
-export function createCaseTemplate(data) {
-  return request({ url: '/at_case_template/', method: 'post', data })
+export function createCaseTemplate(data, onProgress) {
+  return request({ url: '/at_case_template/', method: 'post', data, ...(onProgress && { onUploadProgress: (e) => e.total && onProgress(Math.round(e.loaded * 100 / e.total)) }) })
 }
-export function updateCaseTemplate(id, data) {
-  return request({ url: `/at_case_template/${id}/`, method: 'patch', data })
+export function updateCaseTemplate(id, data, onProgress) {
+  return request({ url: `/at_case_template/${id}/`, method: 'patch', data, ...(onProgress && { onUploadProgress: (e) => e.total && onProgress(Math.round(e.loaded * 100 / e.total)) }) })
 }
 export function deleteCaseTemplate(id) {
   return request({ url: `/at_case_template/${id}/`, method: 'delete' })
@@ -138,8 +138,8 @@ export function getCaseTemplateChoices() {
 export function getAgvTestTaskList(params) {
   return request({ url: '/at_test_task/', method: 'get', params })
 }
-export function createAgvTestTask(data) {
-  return request({ url: '/at_test_task/', method: 'post', data })
+export function createAgvTestTask(data, onProgress) {
+  return request({ url: '/at_test_task/', method: 'post', data, ...(onProgress && { onUploadProgress: (e) => e.total && onProgress(Math.round(e.loaded * 100 / e.total)) }) })
 }
 export function deleteAgvTestTask(id) {
   return request({ url: `/at_test_task/${id}/`, method: 'delete' })

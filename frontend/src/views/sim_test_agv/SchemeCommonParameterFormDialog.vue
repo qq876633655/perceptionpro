@@ -145,10 +145,10 @@ async function handleSubmit() {
     if (selectedFile) fd.append('common_parameter_file', selectedFile)
 
     if (isEdit.value) {
-      await updateCommonParameter(props.editData.id, fd)
+      await updateCommonParameter(props.editData.id, fd, (p) => fileRef.value?.setProgress(p))
       ElMessage.success('修改成功')
     } else {
-      await createCommonParameter(fd)
+      await createCommonParameter(fd, (p) => fileRef.value?.setProgress(p))
       ElMessage.success('创建成功')
     }
     visible.value = false

@@ -146,7 +146,7 @@ async function handleSubmit() {
       if (form.env != null) fd.append('env', form.env)
       if (form.dev_test_result) fd.append('dev_test_result', form.dev_test_result)
       fd.append('version_file', selectedVersionFile.value)
-      await atApi.createVersion(fd)
+      await atApi.createVersion(fd, (p) => versionFileRef.value?.setProgress(p))
       ElMessage.success('版本创建成功')
     } else {
       await atApi.updateVersion(props.editData.id, {

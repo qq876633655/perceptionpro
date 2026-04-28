@@ -72,10 +72,10 @@ async function handleSubmit() {
     if (selectedFile.value) fd.append('map_file', selectedFile.value)
 
     if (isEdit.value) {
-      await updateCaseMap(props.editData.id, fd)
+      await updateCaseMap(props.editData.id, fd, (p) => fileRef.value?.setProgress(p))
       ElMessage.success('修改成功')
     } else {
-      await createCaseMap(fd)
+      await createCaseMap(fd, (p) => fileRef.value?.setProgress(p))
       ElMessage.success('创建成功')
     }
     visible.value = false

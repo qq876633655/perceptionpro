@@ -138,7 +138,7 @@ async function handleSubmit() {
     if (selectedFiles.ctl_version) fd.append('ctl_version', selectedFiles.ctl_version)
     if (selectedFiles.agv_version) fd.append('agv_version', selectedFiles.agv_version)
 
-    await createAgvTestTask(fd)
+    await createAgvTestTask(fd, (p) => caseFileRef.value?.setProgress(p))
     ElMessage.success('创建成功')
     visible.value = false
     emit('success')

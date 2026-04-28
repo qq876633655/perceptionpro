@@ -102,10 +102,10 @@ async function handleSubmit() {
     if (selectedFile) fd.append('case_file', selectedFile)
 
     if (isEdit.value) {
-      await updateCaseTemplate(props.editData.id, fd)
+      await updateCaseTemplate(props.editData.id, fd, (p) => fileRef.value?.setProgress(p))
       ElMessage.success('修改成功')
     } else {
-      await createCaseTemplate(fd)
+      await createCaseTemplate(fd, (p) => fileRef.value?.setProgress(p))
       ElMessage.success('创建成功')
     }
     visible.value = false

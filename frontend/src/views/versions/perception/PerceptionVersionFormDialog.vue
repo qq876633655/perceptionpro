@@ -267,7 +267,7 @@ async function handleSubmit() {
       if (form.dev_test_result) fd.append('dev_test_result', form.dev_test_result)
       fd.append('version_file', selectedVersionFile.value)
       if (selectedDbFile.value) fd.append('database_file', selectedDbFile.value)
-      await createVersion(fd)
+      await createVersion(fd, (p) => versionFileRef.value?.setProgress(p))
       ElMessage.success('版本创建成功')
     } else if (selectedDbFile.value) {
       // 编辑且有文件替换：用 FormData
@@ -279,7 +279,7 @@ async function handleSubmit() {
       fd.append('test_result', form.test_result)
       fd.append('test_verdict', form.test_verdict ?? '')
       fd.append('database_file', selectedDbFile.value)
-      await updateVersion(props.editData.id, fd)
+      await updateVersion(props.editData.id, fd, (p) => dbFileRef.value?.setProgress(p))
       ElMessage.success('版本修改成功')
     } else {
       // 编辑且无文件：用 JSON
