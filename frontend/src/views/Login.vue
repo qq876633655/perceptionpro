@@ -112,7 +112,7 @@ const rules = {
 function handleDingTalkLogin() {
   const url =
     'https://login.dingtalk.com/oauth2/auth?redirect_uri=' +
-    encodeURIComponent('http://' + window.location.hostname + ':' + 8009 + '/dd/no_sign_in/') +
+    encodeURIComponent('http://' + window.location.hostname + ':' + window.location.port + '/dd/no_sign_in/') +
     '&response_type=code&scope=openid&client_id=dingnnpn4oajxevomvwj&prompt=consent'
   window.location.href = url
 }
