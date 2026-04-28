@@ -24,7 +24,7 @@ def dd_h5_robot(user_ids, msg) -> None:
     batch_send_otoheaders = dingtalkrobot__1__0_models.BatchSendOTOHeaders()
     batch_send_otoheaders.x_acs_dingtalk_access_token = dd_config.get_app_access_token()
     msg_param = json.dumps(msg, ensure_ascii=False)
-    robot_code = ppc.ROBOT_CODE
+    robot_code = ppc.DD_H5_APPLICATION_CLIENT_ID
     batch_send_otorequest = dingtalkrobot__1__0_models.BatchSendOTORequest(
         robot_code=robot_code,
         user_ids=user_ids,

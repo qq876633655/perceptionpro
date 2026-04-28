@@ -6,16 +6,22 @@ File:perceptionpro_cfg.py
 """
 
 # 开发环境
-ENV = 'dev'
+ENV = 'pro'
 
 # 平台版本
 PERPRO_VERSION = '2.0.0'
 
 # 数据库名称
-PER_DB_NAME = 'perceptionpro_dev'
+PER_DB_NAME = 'perceptionpro_prod'
 
 # 数据库地址
 PER_DB_HOST = '10.20.24.62'
+
+# PerPro 内网服务地址
+PER_PRO_LOCAL_SERVER_URL = r"http://10.20.24.62:7898"
+
+# PerPro 内网前端地址
+PER_PRO_FRONTEND_URL = r"http://10.20.24.62:7898"
 
 # 测试用的钉钉群机器人 secret webhook
 TEST_SECRET = "SEC523a1e582932bb5c3eb113a45b6b98f426481558e33dd936dc7898be707fcc6f"
@@ -40,12 +46,6 @@ PD2226_VERSIONS_WEBHOOK = "https://oapi.dingtalk.com/robot/send?access_token=897
 # 感知版本发布通知人
 VERSIONS_AT_MOBILES = ['18325815905', '16679001203', '13232121012', '19960803450']
 
-# PerPro 内网服务地址
-PER_PRO_LOCAL_SERVER_URL = r"http://10.20.24.62:8009"
-
-# PerPro 内网服务地址
-PER_PRO_FRONTEND_URL = r"http://10.20.24.62:5173"
-
 # 定位版本发布通知人
 LOC_VERSIONS_AT_MOBILES = ['18325815905', '15052720065']
 
@@ -68,20 +68,6 @@ CTL_VERSIONS_WEBHOOK = "https://oapi.dingtalk.com/robot/send?access_token=f718d2
 
 # 控制测试人员
 CTL_VERSIONS_AT_MOBILES = ['18325815905', '17368811235', '13430166941']
-
-# 微应用配置
-corp_id = "ding93a88f01dc7a5a8735c2f4657eb6378f"
-
-# 发布版H5微应用生产环境
-DD_H5_APPLICATION_CLIENT_ID = "dingnnpn4oajxevomvwj"
-DD_H5_APPLICATION_CLIENT_SECRET = "9wtNb4ogG4ndA680DhLxdnsSKBy2ZPaku5LdsiJl7XqgRZGNUG_z05ud8aWE_faP"
-
-# 发布版H5微应用钉钉机器人
-ROBOT_CODE = "dingnnpn4oajxevomvwj"
-
-# sensor 版本发布是否发送钉钉通知
-SEN_DD_VERSIONS = True
-
 # sensor 版本发布钉钉机器人 secret webhook
 SEN_VERSIONS_SECRET = "SECe4d4604d03ac7cc26407329d2db50802d4d449766b831ba90023777bf5d59016"
 SEN_VERSIONS_WEBHOOK = "https://oapi.dingtalk.com/robot/send?access_token=1f11a13e3ee66cfc494302ba7d5c305c61dc0059c76e1d3417abd3e001007ee3"
@@ -89,12 +75,10 @@ SEN_VERSIONS_WEBHOOK = "https://oapi.dingtalk.com/robot/send?access_token=1f11a1
 # sensor 测试人员
 SEN_VERSIONS_AT_MOBILES = ['18325815905', '16679001203']
 
-# lyang发布版H5微应用环境
-DD_YL_H5_APPLICATION_CLIENT_ID = "dingntydfi1xlippalms"
-DD_YL_H5_APPLICATION_CLIENT_SECRET = "tnoP1sjoamPGSId72oeeRRn69Yvhb_NaaF7J1cw9PQ8rwHSXdvjuDqO8JDvw53uB"
+# 发布版H5微应用生产环境
+DD_H5_APPLICATION_CLIENT_ID = "dingnnpn4oajxevomvwj"
+DD_H5_APPLICATION_CLIENT_SECRET = "9wtNb4ogG4ndA680DhLxdnsSKBy2ZPaku5LdsiJl7XqgRZGNUG_z05ud8aWE_faP"
 
-# lyang发布版H5微应用钉钉机器人
-ROBOT_CODE_TEST_YL = "dingntydfi1xlippalms"
 
 # ── 生产环境覆盖（perceptionpro_cfg_prod.py 不被 git 追踪）────────────
 try:
