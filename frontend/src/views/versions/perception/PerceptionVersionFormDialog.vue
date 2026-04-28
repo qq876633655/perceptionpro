@@ -98,7 +98,7 @@
       <el-form-item v-else label="版本文件" prop="version_file" :error="serverErrors.version_file">
         <FileUploader
           ref="versionFileRef"
-          tip="请上传版本文件，大小不超过 500MB"
+          tip="请上传版本文件"
           @change="handleVersionFileChange"
         />
       </el-form-item>
@@ -107,7 +107,7 @@
       <el-form-item label="数据库文件" :error="serverErrors.database_file">
         <FileUploader
           ref="dbFileRef"
-          tip="支持 .db 格式，可选上传，大小不超过 200MB"
+          tip="支持 .db 格式，可选上传"
           @change="handleDbFileChange"
         />
         <div v-if="isEdit && props.editData?.database_file" class="file-hint">

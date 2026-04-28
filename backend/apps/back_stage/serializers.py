@@ -6,7 +6,8 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth import get_user_model
 
-PHONE_RE = re.compile(r'^1[3-9]\d{9}$')
+# 兼容国际号码：可选 + 前缀，5~15 位数字（E.164 标准）
+PHONE_RE = re.compile(r'^\+?[0-9]{5,15}$')
 
 
 class PermissionSerializer(serializers.ModelSerializer):
@@ -73,7 +74,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def validate_phone_number(self, value):
         if not PHONE_RE.match(value):
-            raise serializers.ValidationError('手机号格式不正确')
+            raise serializers.ValidationError('手机号格式不正确（支持国际号码，如 +8613800138000 或 7622010441）')
         qs = User.objects.filter(phone_number=value)
         if self.instance:
             qs = qs.exclude(pk=self.instance.pk)

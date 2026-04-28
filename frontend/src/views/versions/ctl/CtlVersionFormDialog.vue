@@ -42,7 +42,7 @@
         <el-input :model-value="props.editData?.version_file ? '已上传（版本文件创建后不可修改）' : '未上传（版本文件创建后不可修改）'" disabled />
       </el-form-item>
       <el-form-item v-else label="版本文件" prop="version_file" :error="serverErrors.version_file">
-        <FileUploader ref="versionFileRef" tip="请上传版本文件，大小不超过 500MB" @change="handleVersionFileChange" />
+        <FileUploader ref="versionFileRef" tip="请上传版本文件" @change="handleVersionFileChange" />
       </el-form-item>
     </el-form>
     <template #footer>

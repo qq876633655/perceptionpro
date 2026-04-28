@@ -21,7 +21,7 @@
 
       <!-- 新建：文件必选 -->
       <el-form-item v-if="!isEdit" label="通用资产" prop="common_property" :error="serverErrors.common_property">
-        <FileUploader ref="uploaderRef" tip="请上传通用资产文件，大小不超过 500MB" @change="handleFileChange" />
+        <FileUploader ref="uploaderRef" tip="请上传通用资产文件" @change="handleFileChange" />
       </el-form-item>
 
       <!-- 编辑：显示当前文件 + 可选替换 -->

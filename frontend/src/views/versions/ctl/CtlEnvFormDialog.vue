@@ -11,7 +11,7 @@
         <el-input v-model="form.env_note" type="textarea" :rows="3" placeholder="请输入环境描述（可选）" />
       </el-form-item>
       <el-form-item v-if="!isEdit" label="环境文件" prop="env_file" :error="serverErrors.env_file">
-        <FileUploader ref="uploaderRef" tip="请上传环境文件，大小不超过 500MB" @change="handleFileChange" />
+        <FileUploader ref="uploaderRef" tip="请上传环境文件" @change="handleFileChange" />
       </el-form-item>
       <template v-if="isEdit">
         <el-form-item label="当前文件">
