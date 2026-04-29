@@ -151,6 +151,12 @@ const routes = [
         component: () => import('@/views/sim_test_agv/AgvTestTaskList.vue'),
         meta: { title: '测试任务', parentTitle: '整车仿真测试', parentPath: '/agv-sim/test-task' },
       },
+      {
+        path: 'agv-sim/worker-node',
+        name: 'AgvSimWorkerNode',
+        component: () => import('@/views/sim_test_agv/WorkerNodeList.vue'),
+        meta: { title: 'Worker 管理', parentTitle: '整车仿真测试', parentPath: '/agv-sim/worker-node' },
+      },
       // ── 感知取货测试 ──────────────────────────────────────────────
       {
         path: 'get-test/target',

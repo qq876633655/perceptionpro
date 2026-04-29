@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from apps.sim_test_agv.models import (
     CaseMap, CaseProperty,
-    SchemeCommonParameter, CaseTemplate, AgvTestTask,
+    SchemeCommonParameter, CaseTemplate, AgvTestTask, WorkerNode,
 )
 
 
@@ -60,7 +60,7 @@ class AgvTestTaskCreateSerializer(serializers.ModelSerializer):
         fields = [
             'per_version', 'loc_version', 'ctl_version', 'agv_version',
             'agv_case_file', 'sim_test_version', 'queue_name',
-            'recovery_default_version', 'base_version',
+            'recovery_default_version', 'base_version', 'target_worker',
         ]
 
 
@@ -69,4 +69,13 @@ class AgvTestTaskListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AgvTestTask
+        fields = '__all__'
+
+
+class WorkerNodeSerializer(serializers.ModelSerializer):
+    created_by_name = serializers.CharField(source='created_by.username', read_only=True, default='')
+    updated_by_name = serializers.CharField(source='updated_by.username', read_only=True, default='')
+
+    class Meta:
+        model = WorkerNode
         fields = '__all__'

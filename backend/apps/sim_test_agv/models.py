@@ -137,6 +137,8 @@ class AgvTestTask(CommonDatetime):
     celery_id = models.CharField(verbose_name="执行中的celery_id", max_length=255, null=True, blank=True)
     process_id = models.CharField(verbose_name="执行中的task_process_id", max_length=255, null=True, blank=True)
     worker_name = models.CharField(verbose_name="执行端", max_length=128, null=True, blank=True)
+    target_worker = models.CharField(verbose_name="指定 Worker", max_length=255, null=True, blank=True,
+                                     help_text="空=广播到 queue_name；填写 worker hostname=只发给该 worker 专属队列")
     error_msg = models.TextField(verbose_name="错误信息", null=True, blank=True)
     cancel_requested = models.BooleanField(verbose_name="是否中止", default=False)
 
@@ -144,6 +146,28 @@ class AgvTestTask(CommonDatetime):
                                          max_length=255)
     test_result = models.FileField(verbose_name="测试结果", upload_to=agv_test_task_path, null=True, blank=True,
                                    max_length=255)
+
+
+class WorkerNode(CommonDatetime):
+    """已注册的 Celery Worker 节点（静态登记表）。
+    运行时状态（queue_name / online / busy）从 celery inspect 动态获取。
+    """
+    hostname = models.CharField(
+        verbose_name="Worker 名称", max_length=255, unique=True,
+        help_text="celery -n 参数展开后的完整名称，如 celery@dev_test01.webotsC1@server1"
+    )
+    docker_type = models.CharField(
+        verbose_name="Docker 类型", max_length=64, blank=True, default='',
+        help_text="如 webotsC1、webotsC2，供 task.py 中 run_docker 使用"
+    )
+    ip_address = models.CharField(verbose_name="IP 地址", max_length=64, blank=True, default='')
+    note = models.TextField(verbose_name="备注", blank=True, default='')
+
+    def __str__(self):
+        return self.hostname
+
+    class Meta:
+        ordering = ['hostname']
 
 
 # ════════════════════════════════════════════════════════════════════

@@ -72,27 +72,36 @@ def _monitor_process(task, process):
 
 @per_celery.task(name="agv_sim_test_task", bind=True, acks_late=True)
 def agv_sim_test_task(self, agv_task_id):
-    worker_name = self.request.hostname
-    name, host = worker_name.split("@")
-    run_docker = name.split(".")[1]
-    task_instance = models.AgvTestTask.objects.get(id=agv_task_id)
+    try:
+        try:
+            worker_name = self.request.hostname
+            ip, run_docker = worker_name.split("_")
+        except models.WorkerNode.DoesNotExist:
+            node = models.WorkerNode.objects.get(hostname=self.request.hostname)
+            run_docker = node.docker_type
 
-    # 1. 标记真正开始
-    task_instance.task_status = "RUNNING"
-    task_instance.worker_name = self.request.hostname
-    task_instance.save(update_fields=["task_status", "worker_name"])
+        # 1. 标记真正开始
+        task_instance = models.AgvTestTask.objects.get(id=agv_task_id)
+        task_instance.task_status = "RUNNING"
+        task_instance.worker_name = self.request.hostname
+        task_instance.save(update_fields=["task_status", "worker_name"])
 
-    # 2. 启动 subprocess
-    command = ["/home/agv/VNSim/vnsimautotest/run_test", run_docker, str(agv_task_id)]
-    # command = ["python3", "/home/user/workspace/perceptionpro/backend/demo/sim_test_loop.py", run_docker, str(agv_task_id)]
-    process = subprocess.Popen(
-        command,
-        preexec_fn=os.setsid,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL
-    )
-    task_instance.process_id = process.pid
-    task_instance.save(update_fields=["process_id"])
+        # 2. 启动 subprocess
+        command = ["/home/agv/VNSim/vnsimautotest/run_test", run_docker, str(agv_task_id)]
+        # command = ["python3", "/home/agv/VNSim/vnsimautotest/demo/sim_test_loop.py", run_docker, str(agv_task_id)]
+        process = subprocess.Popen(
+            command,
+            preexec_fn=os.setsid,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+        task_instance.process_id = process.pid
+        task_instance.save(update_fields=["process_id"])
+    except Exception as e:
+        task_instance.task_status = "FAILED"
+        task_instance.error_msg = str(e)
+        task_instance.save(update_fields=["task_status", "error_msg"])
+        raise
 
     try:
         _monitor_process(task_instance, process)

@@ -12,7 +12,7 @@
         </el-col>
         <el-col :span="12">
           <el-form-item label="任务队列" prop="queue_name" :error="serverErrors.queue_name">
-            <el-input v-model="form.queue_name" placeholder="请输入任务队列" clearable />
+            <el-input v-model="form.queue_name" placeholder="请输入任务队列" clearable @input="form.target_worker = ''" />
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -26,6 +26,22 @@
         <el-col :span="12">
           <el-form-item label="待测基线版本" :error="serverErrors.base_version">
             <el-input v-model="form.base_version" placeholder="可选" clearable />
+          </el-form-item>
+        </el-col>
+        <el-col :span="24">
+          <el-form-item label="指定 Worker" :error="serverErrors.target_worker">
+            <el-select v-model="form.target_worker" placeholder="可选，不选则由队列广播" clearable filterable style="width:100%">
+              <el-option
+                v-for="w in filteredWorkers"
+                :key="w.hostname"
+                :label="`${w.hostname}${w.queues.length ? ' [' + w.queues.join(',') + ']' : ''} — ${workerStatusLabel(w.status)}`"
+                :value="w.hostname"
+                :disabled="w.status === 'offline'"
+              />
+            </el-select>
+            <div v-if="form.queue_name && filteredWorkers.length === 0" style="font-size:12px;color:#e6a23c;margin-top:4px">
+              当前队列无在线 Worker，任务将等待 Worker 上线后执行
+            </div>
           </el-form-item>
         </el-col>
       </el-row>
@@ -59,7 +75,7 @@
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import { createAgvTestTask, getCasePropertySimTestVersions } from '@/api/sim_test_agv'
+import { createAgvTestTask, getCasePropertySimTestVersions, getWorkerStatus } from '@/api/sim_test_agv'
 import { useFormErrors } from '@/composables/useFormErrors'
 import FileUploader from '@/components/FileUploader.vue'
 
@@ -75,7 +91,23 @@ const ctlFileRef = ref(null)
 const agvFileRef = ref(null)
 const submitting = ref(false)
 const simTestVersions = ref([])
+const workerList = ref([])
 const { serverErrors, applyServerErrors, clearServerErrors } = useFormErrors()
+
+// 按 queue_name 过滤在线 worker（queues 包含输入的版本字符串）
+const filteredWorkers = computed(() => {
+  if (!form.queue_name) return workerList.value.filter(w => w.status !== 'offline')
+  return workerList.value.filter(w =>
+    w.status !== 'offline' && w.queues.some(q => q === form.queue_name)
+  )
+})
+
+const WORKER_STATUS = {
+  online: '空闲',
+  busy: '执行中',
+  offline: '离线',
+}
+function workerStatusLabel(s) { return WORKER_STATUS[s] ?? s }
 
 const selectedFiles = reactive({
   agv_case_file: null,
@@ -90,6 +122,7 @@ const form = reactive({
   queue_name: '',
   recovery_default_version: 'False',
   base_version: '',
+  target_worker: '',
   agv_case_file_guard: null,
 })
 
@@ -115,12 +148,19 @@ watch(() => props.visible, async val => {
   locFileRef.value?.reset?.()
   ctlFileRef.value?.reset?.()
   agvFileRef.value?.reset?.()
-  Object.assign(form, { sim_test_version: '', queue_name: '', recovery_default_version: 'False', base_version: '', agv_case_file_guard: null })
+  Object.assign(form, { sim_test_version: '', queue_name: '', recovery_default_version: 'False', base_version: '', target_worker: '', agv_case_file_guard: null })
 
   try {
-    const res = await getCasePropertySimTestVersions()
-    simTestVersions.value = res.data ?? []
-  } catch { simTestVersions.value = [] }
+    const [verRes, workerRes] = await Promise.all([
+      getCasePropertySimTestVersions(),
+      getWorkerStatus(),
+    ])
+    simTestVersions.value = verRes.data ?? []
+    workerList.value = Array.isArray(workerRes) ? workerRes : (workerRes.data ?? [])
+  } catch {
+    simTestVersions.value = []
+    workerList.value = []
+  }
 })
 
 async function handleSubmit() {
@@ -132,6 +172,7 @@ async function handleSubmit() {
     fd.append('queue_name', form.queue_name)
     fd.append('recovery_default_version', form.recovery_default_version)
     if (form.base_version) fd.append('base_version', form.base_version)
+    if (form.target_worker) fd.append('target_worker', form.target_worker)
     if (selectedFiles.agv_case_file) fd.append('agv_case_file', selectedFiles.agv_case_file)
     if (selectedFiles.per_version) fd.append('per_version', selectedFiles.per_version)
     if (selectedFiles.loc_version) fd.append('loc_version', selectedFiles.loc_version)

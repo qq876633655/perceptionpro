@@ -1,7 +1,7 @@
 import django_filters
 from apps.sim_test_agv.models import (
     CaseMap, CaseProperty,
-    SchemeCommonParameter, CaseTemplate, AgvTestTask,
+    SchemeCommonParameter, CaseTemplate, AgvTestTask, WorkerNode,
 )
 
 
@@ -66,3 +66,12 @@ class AgvTestTaskFilter(django_filters.FilterSet):
     class Meta:
         model = AgvTestTask
         fields = ['sim_test_version', 'queue_name', 'task_status', 'created_by']
+
+
+class WorkerNodeFilter(django_filters.FilterSet):
+    hostname = django_filters.CharFilter(lookup_expr='icontains')
+    ip_address = django_filters.CharFilter(lookup_expr='icontains')
+
+    class Meta:
+        model = WorkerNode
+        fields = ['hostname', 'ip_address']

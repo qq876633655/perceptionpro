@@ -17,7 +17,11 @@ from config import perceptionpro_cfg as ppc
 from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+# PyInstaller 冻结环境下 __file__ 指向 /tmp/_MEIxxx/...，改用可执行文件所在目录
+if getattr(sys, 'frozen', False):
+    BASE_DIR = Path(sys.executable).resolve().parent
+else:
+    BASE_DIR = Path(__file__).resolve().parent.parent
 
 # app 集合到 apps
 sys.path.insert(0, os.path.join(BASE_DIR, 'apps')),

@@ -68,6 +68,7 @@
           <el-menu-item index="/agv-sim/common-parameter">通用参数</el-menu-item>
           <el-menu-item index="/agv-sim/case-template">用例模版</el-menu-item>
           <el-menu-item index="/agv-sim/test-task">测试任务</el-menu-item>
+          <el-menu-item index="/agv-sim/worker-node">Worker 管理</el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu v-if="authStore.userInfo?.is_staff" index="/get-test">

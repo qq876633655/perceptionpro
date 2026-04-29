@@ -10,6 +10,7 @@ from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth import get_user_model
 
@@ -17,16 +18,18 @@ from apps.back_stage.permissions import HasModelPermission
 from apps.common_views.views import BaseModelViewSet
 from apps.sim_test_agv.models import (
     CaseMap, CaseProperty,
-    SchemeCommonParameter, CaseTemplate, AgvTestTask,
+    SchemeCommonParameter, CaseTemplate, AgvTestTask, WorkerNode,
 )
 from apps.sim_test_agv.serializers import (
     CaseMapSerializer,
     CasePropertySerializer, SchemeCommonParameterSerializer,
     CaseTemplateSerializer, AgvTestTaskCreateSerializer, AgvTestTaskListSerializer,
+    WorkerNodeSerializer,
 )
 from apps.sim_test_agv.filters import (
     CaseMapFilter, CasePropertyFilter,
     SchemeCommonParameterFilter, CaseTemplateFilter, AgvTestTaskFilter,
+    WorkerNodeFilter,
 )
 from apps.sim_test_agv import tasks as agv_tasks
 
@@ -469,10 +472,11 @@ class AgvTestTaskViewSet(BaseModelViewSet):
             created_by=self.request.user,
             task_status='DISPATCHED',
         )
-        queue_name = instance.queue_name
+        # target_worker 非空时下发到该 worker 专属队列，否则广播到版本队列
+        dispatch_queue = instance.target_worker if instance.target_worker else instance.queue_name
         celery_task = agv_tasks.agv_sim_test_task.apply_async(
             args=[instance.id],
-            queue=queue_name,
+            queue=dispatch_queue,
         )
         instance.celery_id = celery_task.id
         instance.save(update_fields=['celery_id'])
@@ -529,3 +533,136 @@ class AgvTestTaskViewSet(BaseModelViewSet):
     def creators(self, request):
         ids = AgvTestTask.objects.exclude(created_by=None).values_list('created_by', flat=True).distinct()
         return Response(list(User.objects.filter(id__in=ids).values('id', 'username')))
+
+
+# ── WorkerNode CRUD ───────────────────────────────────────────────────
+
+class WorkerNodeViewSet(BaseModelViewSet):
+    queryset = WorkerNode.objects.all().order_by('hostname')
+    serializer_class = WorkerNodeSerializer
+    permission_classes = _PERMS
+    filter_backends = _FILTER_BACKENDS
+    filterset_class = WorkerNodeFilter
+    search_fields = ['hostname', 'ip_address', 'note']
+    ordering_fields = ['hostname', 'create_time']
+
+    @action(methods=['get'], detail=False, url_path='history_stats')
+    def history_stats(self, request):
+        """返回每个 worker 的历史任务统计（来自 DB）"""
+        from django.db.models import Count, Q
+        rows = (
+            AgvTestTask.objects
+            .exclude(worker_name=None)
+            .exclude(worker_name='')
+            .values('worker_name')
+            .annotate(
+                total=Count('id'),
+                success=Count('id', filter=Q(task_status='SUCCESS')),
+                failed=Count('id', filter=Q(task_status='FAILED')),
+            )
+        )
+        return Response({r['worker_name']: r for r in rows})
+
+
+# ── Worker 实时状态 ────────────────────────────────────────────────────
+
+class WorkerStatusView(APIView):
+    """
+    GET /api/at_worker_status/
+    返回所有 WorkerNode 的实时状态，通过 celery inspect 动态获取。
+
+    响应格式（列表）：
+    [
+      {
+        "id": 1,
+        "hostname": "agv01.webotsC1@server1",
+        "ip_address": "10.20.24.10",
+        "note": "...",
+        "status": "online|offline|busy",
+        "queues": ["5.3.0"],
+        "active_tasks": [{"id": "...", "name": "...", "args": [...]}]
+      },
+      ...
+    ]
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from dev_perceptionpro.celery import per_celery
+
+        nodes = list(WorkerNode.objects.all())
+        if not nodes:
+            return Response([])
+
+        all_hostnames = [n.hostname for n in nodes]
+
+        # ── 第一阶段：ping 所有已注册 worker，只等一次3s超时 ──
+        try:
+            ping_result = per_celery.control.inspect(
+                destination=all_hostnames, timeout=3,
+            ).ping() or {}
+        except Exception:
+            ping_result = {}
+
+        online_hosts = set(ping_result.keys())
+
+        # ── 第二阶段：只对在线 worker 查详细信息，离线节点不再占满超时 ──
+        if online_hosts:
+            detail = per_celery.control.inspect(
+                destination=list(online_hosts), timeout=3,
+            )
+            try:
+                active_queues_result = detail.active_queues() or {}
+                active_tasks_result  = detail.active()        or {}
+                reserved_result      = detail.reserved()      or {}
+                stats_result         = detail.stats()         or {}
+            except Exception:
+                active_queues_result = {}
+                active_tasks_result  = {}
+                reserved_result      = {}
+                stats_result         = {}
+        else:
+            active_queues_result = {}
+            active_tasks_result  = {}
+            reserved_result      = {}
+            stats_result         = {}
+
+        result = []
+        for node in nodes:
+            is_online = node.hostname in online_hosts
+            active_tasks   = active_tasks_result.get(node.hostname, [])
+            queue_info     = active_queues_result.get(node.hostname, [])
+            queues         = [q.get('name', '') for q in queue_info if q.get('name')]
+            reserved_tasks = reserved_result.get(node.hostname, [])
+            stats          = stats_result.get(node.hostname, {})
+            total_count    = sum(stats.get('total', {}).values()) if stats.get('total') else 0
+
+            if not is_online:
+                status = 'offline'
+            elif active_tasks:
+                status = 'busy'
+            else:
+                status = 'online'
+
+            result.append({
+                'id': node.id,
+                'hostname': node.hostname,
+                'docker_type': node.docker_type,
+                'ip_address': node.ip_address,
+                'note': node.note,
+                'status': status,
+                'queues': queues,
+                'active_tasks': [
+                    {
+                        'id': t.get('id', ''),
+                        'name': t.get('name', ''),
+                        'args': t.get('args', []),
+                    }
+                    for t in active_tasks
+                ],
+                'reserved_count': len(reserved_tasks),
+                'session_total': total_count,
+            })
+
+        return Response(result)
+

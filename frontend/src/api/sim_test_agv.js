@@ -153,3 +153,39 @@ export function cancelAgvTestTask(id) {
 export function getAgvTestTaskCreators() {
   return request({ url: '/at_test_task/creators/', method: 'get' })
 }
+
+// ════════════════════════════════════════════════════════════
+// WorkerNode  /api/at_worker_node/
+// ════════════════════════════════════════════════════════════
+
+export function getWorkerNodeList(params) {
+  return request({ url: '/at_worker_node/', method: 'get', params })
+}
+export function createWorkerNode(data) {
+  return request({ url: '/at_worker_node/', method: 'post', data })
+}
+export function updateWorkerNode(id, data) {
+  return request({ url: `/at_worker_node/${id}/`, method: 'patch', data })
+}
+export function deleteWorkerNode(id) {
+  return request({ url: `/at_worker_node/${id}/`, method: 'delete' })
+}
+export function batchDeleteWorkerNodes(ids) {
+  return request({ url: '/at_worker_node/batch_delete/', method: 'post', data: { ids } })
+}
+
+// ════════════════════════════════════════════════════════════
+// Worker 实时状态  /api/at_worker_status/
+// ════════════════════════════════════════════════════════════
+
+export function getWorkerStatus() {
+  return request({ url: '/at_worker_status/', method: 'get' })
+}
+
+// ════════════════════════════════════════════════════════════
+// WorkerNode 历史统计  /api/at_worker_node/history_stats/
+// ════════════════════════════════════════════════════════════
+
+export function getWorkerHistoryStats() {
+  return request({ url: '/at_worker_node/history_stats/', method: 'get' })
+}
