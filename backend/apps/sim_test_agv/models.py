@@ -129,7 +129,7 @@ class AgvTestTask(CommonDatetime):
                                                 choices=recovery_default_version_choices, default='False')
     base_version = models.CharField(verbose_name="待测基线版本", max_length=255, null=True, blank=True)
     manual_error_handling = models.CharField(verbose_name="是否手动处理错误", max_length=16,
-                                             choices=manual_error_handling_choices, default='True')
+                                             choices=manual_error_handling_choices, default='False')
 
     task_status = models.CharField(verbose_name="任务状态", max_length=16, null=True, blank=True,
                                    choices=celery_task_status_choices, default='CREATED')
