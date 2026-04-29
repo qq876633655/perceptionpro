@@ -1,7 +1,7 @@
 <template>
   <el-dialog v-model="visible" :title="isEdit ? '编辑 Worker 节点' : '新建 Worker 节点'" width="520px"
     :close-on-click-modal="false" @closed="handleClosed">
-    <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
+    <el-form ref="formRef" :model="form" :rules="rules" label-width="110px">
       <el-form-item label="Worker 名称" prop="hostname" :error="serverErrors.hostname">
         <el-input v-model="form.hostname" placeholder="如 celery@dev_test01.webotsC1@server1" clearable />
       </el-form-item>
