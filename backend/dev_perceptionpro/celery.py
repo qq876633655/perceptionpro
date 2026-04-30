@@ -19,6 +19,7 @@ per_celery.conf.task_default_exchange_type = 'topic'
 per_celery.conf.task_default_routing_key = 'default'
 per_celery.conf.task_default_queue = 'default'
 per_celery.conf.broker_url = 'redis://10.20.24.62:6380/0'  # 中间人 url
+per_celery.conf.broker_transport_options = {'visibility_timeout': 604800}  # 24h，需大于最长任务耗时，否则 acks_late 会导致重复消费
 per_celery.conf.result_backend = "django-db"  # 支持数据库django-db
 per_celery.conf.accept_content = ['application/json', ]  # 协议
 per_celery.conf.task_serializer = 'json'  # 序列化方式
@@ -51,6 +52,11 @@ per_celery.conf.beat_schedule = {
         'schedule': crontab(minute='1', hour='0'),
         # 'schedule': timedelta(seconds=10),
         'options': {'queue': 'default'}
+    },
+    'check_stale_tasks': {
+        'task': 'check_stale_tasks',
+        'schedule': crontab(minute='0', hour='*/6'),  # 每 6 小时巡检一次
+        'options': {'queue': 'default'},
     },
     # 'everyday_defect_onsite':{
     #     'task':"apps.quality_control.tasks.schedule_notification",

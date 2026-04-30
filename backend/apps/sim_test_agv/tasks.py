@@ -10,6 +10,7 @@ import django
 import subprocess
 import psutil
 import time
+from datetime import timedelta
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dev_perceptionpro.settings")
 django.setup()
@@ -70,9 +71,14 @@ def _monitor_process(task, process):
         time.sleep(1)
 
 
-@per_celery.task(name="agv_sim_test_task", bind=True, acks_late=True)
+@per_celery.task(name="agv_sim_test_task", bind=True)
 def agv_sim_test_task(self, agv_task_id):
     try:
+        # ── 幂等守卫：只有 DISPATCHED 状态才允许执行 ──
+        task_instance = models.AgvTestTask.objects.get(id=agv_task_id)
+        if task_instance.task_status != 'DISPATCHED':
+            return
+
         try:
             worker_name = self.request.hostname
             ip, run_docker = worker_name.split("_")
@@ -81,7 +87,6 @@ def agv_sim_test_task(self, agv_task_id):
             run_docker = node.docker_type
 
         # 1. 标记真正开始
-        task_instance = models.AgvTestTask.objects.get(id=agv_task_id)
         task_instance.task_status = "RUNNING"
         task_instance.worker_name = self.request.hostname
         task_instance.save(update_fields=["task_status", "worker_name"])
@@ -91,7 +96,6 @@ def agv_sim_test_task(self, agv_task_id):
         # command = ["python3", "/home/agv/VNSim/vnsimautotest/demo/sim_test_loop.py", run_docker, str(agv_task_id)]
         process = subprocess.Popen(
             command,
-            preexec_fn=os.setsid,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
@@ -110,3 +114,19 @@ def agv_sim_test_task(self, agv_task_id):
         task_instance.error_msg = str(e)
         task_instance.save(update_fields=["task_status", "error_msg"])
         raise
+
+
+@per_celery.task(name="check_stale_tasks", queue='default')
+def check_stale_tasks():
+    """巡检：超过 8 天仍为 RUNNING 的任务标记为 FAILED"""
+    from django.utils import timezone
+    threshold = timezone.now() - timedelta(days=8)
+    stale = models.AgvTestTask.objects.filter(
+        task_status='RUNNING',
+        update_time__lt=threshold,
+    )
+    count = stale.update(
+        task_status='FAILED',
+        error_msg='任务超时未完成，系统自动标记失败',
+    )
+    return f'标记 {count} 个僵死任务'
