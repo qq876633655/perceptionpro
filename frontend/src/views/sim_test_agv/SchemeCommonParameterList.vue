@@ -72,7 +72,7 @@
         <el-table-column prop="test_module" label="测试模块" min-width="110" />
         <el-table-column prop="common_parameter_file" label="通参文件" width="90">
           <template #default="{ row }">
-            <a v-if="row.common_parameter_file" :href="row.common_parameter_file" target="_blank" class="download-link">下载</a>
+            <a v-if="row.common_parameter_file" :href="row.common_parameter_file" download class="download-link">下载</a>
             <span v-else>-</span>
           </template>
         </el-table-column>

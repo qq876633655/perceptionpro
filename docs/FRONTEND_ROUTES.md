@@ -71,12 +71,12 @@
 
 | 路径 | 名称 | 组件 | 标题 |
 |------|------|------|------|
-| `/agv-sim/versions` | AgvSimVersions | `views/sim_test_agv/AutoTestVersionsList.vue` | 自动化版本 |
 | `/agv-sim/case-map` | AgvSimCaseMap | `views/sim_test_agv/CaseMapList.vue` | 地图管理 |
 | `/agv-sim/case-property` | AgvSimCaseProperty | `views/sim_test_agv/CasePropertyList.vue` | 资产管理 |
 | `/agv-sim/common-parameter` | AgvSimCommonParameter | `views/sim_test_agv/SchemeCommonParameterList.vue` | 通用参数 |
 | `/agv-sim/case-template` | AgvSimCaseTemplate | `views/sim_test_agv/CaseTemplateList.vue` | 用例模版 |
 | `/agv-sim/test-task` | AgvSimTestTask | `views/sim_test_agv/AgvTestTaskList.vue` | 测试任务 |
+| `/agv-sim/worker-node` | AgvSimWorkerNode | `views/sim_test_agv/WorkerNodeList.vue` | Worker 管理 |
 
 #### 感知取货测试（侧边栏 `v-if="is_staff"`）
 
@@ -122,27 +122,40 @@
 | API 文件 | 对应后端 app | URL 前缀 | 说明 |
 |----------|-------------|---------|------|
 | `src/api/auth.js` | `back_stage` | `/api/login/`、`/api/token/`、`/api/me/` | 登录、刷新 token、当前用户信息、修改密码 |
+| `src/api/admin.js` | `back_stage` | `/api/users/`、`/api/groups/` | 用户与角色管理（is_staff / 超管权限） |
 | `src/api/version.js` | `version_pack` | `/api/per_*/`、`/api/loc_*/`、`/api/ctl_*/`、`/api/sim_*/`、`/api/sen_*/` | 5 组版本+环境 CRUD |
-| `src/api/sim_test_agv.js` | `sim_test_agv` | `/api/at_versions/`、`/api/at_case_map/`、`/api/at_case_property/`、`/api/at_common_parameter/`、`/api/at_case_template/`、`/api/at_test_task/` | 整车仿真测试全部接口 |
+| `src/api/data_manage.js` | `data_manage` | `/api/sim_project_property/`、`/api/sim_common_property/` | 仿真数据管理 |
+| `src/api/sim_test_agv.js` | `sim_test_agv` | `/api/at_case_map/`、`/api/at_case_property/`、`/api/at_common_parameter/`、`/api/at_case_template/`、`/api/at_test_task/`、`/api/at_worker_node/`、`/api/at_worker_status/` | 整车仿真测试全部接口 |
 | `src/api/sim_test_get.js` | `sim_test_get` | `/api/gt_test_target/`、`/api/gt_agv_body/`、`/api/gt_common_param/` | 感知取货测试全部接口 |
 
 ### `src/api/sim_test_agv.js` 主要函数
 
 | 函数 | 方法 | 路径 |
 |------|------|------|
-| `getAtVersionsList` | GET | `/at_versions/` |
-| `createAtVersions` | POST | `/at_versions/` |
-| `updateAtVersions(id, data)` | PATCH | `/at_versions/{id}/` |
-| `deleteAtVersions(id)` | DELETE | `/at_versions/{id}/` |
-| `batchDeleteAtVersions(ids)` | POST | `/at_versions/batch_delete/` |
+| `getCaseMapList` | GET | `/at_case_map/` |
+| `createCaseMap` | POST | `/at_case_map/` |
+| `updateCaseMap(id, data)` | PATCH | `/at_case_map/{id}/` |
+| `deleteCaseMap(id)` | DELETE | `/at_case_map/{id}/` |
+| `batchDeleteCaseMaps(ids)` | POST | `/at_case_map/batch_delete/` |
+| `getCaseMapCreators` | GET | `/at_case_map/creators/` |
+| `getCaseMapOptions` | GET | `/at_case_map/?page_size=9999` |
 | `getCasePropertyList` | GET | `/at_case_property/` |
 | `batchCopyCaseProperties(ids, version)` | POST | `/at_case_property/batch_copy/` |
 | `getCasePropertyChoices` | GET | `/at_case_property/choices/` |
+| `getCasePropertySimTestVersions` | GET | `/at_case_property/sim_test_versions/` |
 | `uploadCasePropertyFolder(id, data)` | POST | `/at_case_property/{id}/upload_folder_field/` |
 | `downloadCasePropertyFolder(id, field)` | GET (blob) | `/at_case_property/{id}/download_folder_field/` |
 | `getCommonParameterChoices` | GET | `/at_common_parameter/choices/` |
 | `batchCopyCommonParameters(items)` | POST | `/at_common_parameter/batch_copy/` |
+| `getCaseTemplateChoices` | GET | `/at_case_template/choices/` |
 | `cancelAgvTestTask(id)` | POST | `/at_test_task/{id}/cancel/` |
+| `getWorkerNodeList` | GET | `/at_worker_node/` |
+| `createWorkerNode(data)` | POST | `/at_worker_node/` |
+| `updateWorkerNode(id, data)` | PATCH | `/at_worker_node/{id}/` |
+| `deleteWorkerNode(id)` | DELETE | `/at_worker_node/{id}/` |
+| `batchDeleteWorkerNodes(ids)` | POST | `/at_worker_node/batch_delete/` |
+| `getWorkerStatus` | GET | `/at_worker_status/` |
+| `getWorkerHistoryStats` | GET | `/at_worker_node/history_stats/` |
 
 ### `src/api/sim_test_get.js` 主要函数
 

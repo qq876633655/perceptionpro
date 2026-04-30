@@ -185,7 +185,9 @@ if (canDo(['app.add_model', 'app.change_model'])) { ... }
 frontend/src/
 ├── api/                   # 各模块 API 函数（按后端 app 分文件）
 │   ├── auth.js
+│   ├── admin.js
 │   ├── version.js
+│   ├── data_manage.js
 │   ├── sim_test_agv.js
 │   └── sim_test_get.js
 ├── assets/                # 静态资源

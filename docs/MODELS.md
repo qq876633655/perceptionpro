@@ -134,17 +134,6 @@
 
 ## App: sim_test_agv
 
-### `AutoTestVersions`
-
-| 字段 | 类型 | 约束 | 说明 |
-|------|------|------|------|
-| `id` | BigAutoField | PK | |
-| `uid` | UUIDField | unique, editable=False | 文件路径隔离 |
-| `versions` | CharField(128) | unique | 版本号 |
-| `versions_file` | FileField | max_length=256 | 路径：`at_versions/{uid}/{filename}` |
-| `release_note` | TextField | null, blank | 发布说明 |
-| + CommonDatetime 字段 | | | |
-
 ### `CaseMap`
 
 | 字段 | 类型 | 约束 | 说明 |
@@ -223,6 +212,7 @@
 | `celery_id` | CharField(255) | null, blank | 执行中的 Celery 任务 ID |
 | `process_id` | CharField(255) | null, blank | 任务进程 ID |
 | `worker_name` | CharField(128) | null, blank | 执行端名称 |
+| `target_worker` | CharField(255) | null, blank | 指定 Worker hostname，空=广播到 queue_name，填写=只发给该 worker 专属队列 |
 | `error_msg` | TextField | null, blank | 错误信息 |
 | `cancel_requested` | BooleanField | default=False | 是否请求中止 |
 | `auto_test_run_log` | FileField | null, blank，max_length=255 | 运行日志文件 |
@@ -230,6 +220,21 @@
 | + CommonDatetime 字段 | | | |
 
 > **无编辑接口**：该模型不允许 PUT/PATCH，任务状态由 Celery Worker 回写
+
+### `WorkerNode`
+
+已注册的 Celery Worker 节点静态登记表，运行时状态（在线/离线/队列）通过 Celery inspect 动态获取。
+
+| 字段 | 类型 | 约束 | 说明 |
+|------|------|------|------|
+| `id` | BigAutoField | PK | |
+| `hostname` | CharField(255) | unique | Worker 名称，如 `celery@10.20.24.75_webotsC2` |
+| `docker_type` | CharField(64) | blank, default='' | Docker 类型，如 `webotsC1`/`webotsC2`，供任务脚本 run_docker 使用 |
+| `ip_address` | CharField(64) | blank, default='' | IP 地址 |
+| `note` | TextField | blank, default='' | 备注 |
+| + CommonDatetime 字段 | | | |
+
+> **Meta**: `ordering = ['hostname']`
 
 ---
 
@@ -247,7 +252,6 @@
 | SenEnv / SenVersion | `sen_env/` / `sen_versions/` |
 | SimProjectProperty.project_property | `sim_project_property/{uid}/{filename}` |
 | SimCommonProperty.common_property | `sim_common_property/{uid}/{filename}` |
-| AutoTestVersions.versions_file | `at_versions/{uid}/{filename}` |
 | CaseMap.map_file | `sim_res_bak/map/{filename}` |
 | CaseProperty.backup_file / wbt_file | `sim_res_bak/{ver}/{vehicle}/{scheme}/{filename}` |
 | CaseProperty 路径字段（4个） | `sim_res_bak/{ver}/{vehicle}/{scheme}/{field_name}/{folder_root}/` |

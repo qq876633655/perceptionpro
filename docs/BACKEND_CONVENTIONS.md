@@ -371,9 +371,56 @@ LocVersionViewSet = make_version_viewset(
 `back_stage/views.py` 中定义：
 
 ```python
-BUSINESS_APPS = {'back_stage', 'version_pack', 'common_views', 'data_manage', 'sim_test_agv'}
+BUSINESS_APPS = {'back_stage', 'version_pack', 'common_views', 'data_manage', 'sim_test_agv', 'sim_test_get'}
 ```
 
 `GET /api/groups/all_permissions/` 仅返回这些 app 的权限，过滤掉 Django 内置 app（`admin`、`auth`、`contenttypes`、`sessions`）的权限，保持前端权限选择器的简洁。
 
 > **新增 app 时**：必须将 app label 加入此集合，否则该 app 的权限不会出现在角色配置界面。
+
+---
+
+## 十一、Celery 配置与任务约定
+
+### 11.1 配置（`dev_perceptionpro/celery.py`）
+
+| 配置项 | 值 | 说明 |
+|--------|-----|------|
+| `broker_url` | `redis://10.20.24.62:6380/0` | 消息中间人 |
+| `broker_transport_options.visibility_timeout` | `604800`（7 天） | 任务取走后未 ACK 的最大保留时长，需大于最长任务耗时 |
+| `result_backend` | `django-db` | 任务结果持久化到 Django 数据库 |
+| `task_track_started` | `True` | Worker 开始执行时上报 STARTED 状态 |
+| `worker_enable_remote_control` | `True` | 支持 `celery inspect`、`celery control` 远程命令 |
+| `worker_send_task_events` | `True` | Worker 发送任务事件（供 Flower 等监控使用） |
+| `task_result_expires` | `86400`（1 天） | 结果存储过期时间 |
+
+> 生产环境可通过 `dev_perceptionpro/celery_prod.py`（不被 git 追踪）覆盖 `BROKER_URL`。
+
+### 11.2 已注册的定时任务（beat_schedule）
+
+| 任务名 | 调度 | 队列 | 说明 |
+|--------|------|------|------|
+| `apps.quality_control.tasks.timer_defect_total` | 每天 0:01 | default | 缺陷统计 |
+| `check_stale_tasks` | 每 6 小时 | default | 巡检超过 8 天仍为 RUNNING 的任务，自动标记 FAILED |
+
+### 11.3 `agv_sim_test_task` 关键设计
+
+| 特性 | 说明 |
+|------|------|
+| `acks_early`（默认） | 消息取到即 ACK，避免 `visibility_timeout` 导致的重复分发 |
+| 幂等守卫 | 开头检查 `task_status == 'DISPATCHED'`，非该状态直接 return，防止重复执行 |
+| 取消机制 | `_monitor_process` 每秒轮询 `cancel_requested` 字段，为 True 时 kill 进程树并标记 CANCELED |
+| 队列路由 | 由 `perform_create` 根据 `target_worker`（非空）或 `queue_name`（默认）决定 dispatch 队列 |
+
+### 11.4 Worker 启动命令
+
+```bash
+celery -A dev_perceptionpro worker \
+  -Q "${QUEUE_NAME},${WORKER_NAME}" \
+  -l info -c 1 \
+  -n "${WORKER_NAME}" \
+  -Ofair --prefetch-multiplier=1
+```
+
+- `WORKER_NAME` 格式：`celery@{ip}_{docker_type}`，如 `celery@10.20.24.75_webotsC2`
+- Worker 同时监听版本队列（`QUEUE_NAME`）和自身专属队列（`WORKER_NAME`），实现广播+定向两种分发模式

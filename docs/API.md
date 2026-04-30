@@ -114,17 +114,6 @@
 
 所有接口均需 `已登录 + HasModelPermission`。
 
-### 自动化测试版本  `/api/at_versions/`
-
-| 方法 | 路径 | 权限码 | 说明 |
-|------|------|--------|------|
-| GET | `/api/at_versions/` | `sim_test_agv.view_autotestversions` | 列表，过滤：`versions`(icontains)、`created_by`、`create_time_after/before`；搜索：`versions` |
-| POST | `/api/at_versions/` | `sim_test_agv.add_autotestversions` | 新建版本（multipart，含 versions_file） |
-| PATCH | `/api/at_versions/{id}/` | `sim_test_agv.change_autotestversions` | 更新（可更新 release_note） |
-| DELETE | `/api/at_versions/{id}/` | `sim_test_agv.delete_autotestversions` | 删除 |
-| POST | `/api/at_versions/batch_delete/` | `delete_` | 批量删除 |
-| GET | `/api/at_versions/creators/` | `view_` | 创建人列表 |
-
 ### 地图管理  `/api/at_case_map/`
 
 | 方法 | 路径 | 权限码 | 说明 |
@@ -222,8 +211,57 @@
 | `agv_version` | 可选 | 整车测试版本包 |
 | `recovery_default_version` | 可选 | default: `'False'` |
 | `base_version` | 可选 | 待测基线版本 |
+| `target_worker` | 可选 | 指定 Worker hostname（空则广播到 queue_name） |
 
----
+#### Worker 回调接口（无需登录）
+
+| 方法 | 路径 | 权限 | 说明 |
+|------|------|------|------|
+| **POST** | `/api/at_test_task/{id}/upload_test_result/` | AllowAny | Worker 上传测试结果文件，multipart 字段名 `file` |
+| **POST** | `/api/at_test_task/{id}/upload_run_log/` | AllowAny | Worker 上传运行日志文件，multipart 字段名 `file` |
+
+### Worker 节点管理  `/api/at_worker_node/`
+
+| 方法 | 路径 | 权限码 | 说明 |
+|------|------|--------|------|
+| GET | `/api/at_worker_node/` | `sim_test_agv.view_workernode` | 列表，过滤：`hostname`/`ip_address`(icontains)；搜索：`hostname`、`ip_address`、`note` |
+| POST | `/api/at_worker_node/` | `sim_test_agv.add_workernode` | 新建 Worker 节点，body: JSON |
+| GET | `/api/at_worker_node/{id}/` | `view_` | 详情 |
+| PATCH | `/api/at_worker_node/{id}/` | `change_` | 更新 |
+| DELETE | `/api/at_worker_node/{id}/` | `delete_` | 删除 |
+| POST | `/api/at_worker_node/batch_delete/` | `delete_` | 批量删除，body: `{ "ids": [...] }` |
+| GET | `/api/at_worker_node/history_stats/` | `view_` | 返回每个 worker 的历史任务统计 `{ "worker_name": { total, success, failed } }` |
+
+#### `history_stats` 响应示例
+
+```json
+{
+  "celery@10.20.24.75_webotsC2": { "worker_name": "celery@10.20.24.75_webotsC2", "total": 42, "success": 38, "failed": 4 }
+}
+```
+
+### Worker 实时状态  `/api/at_worker_status/`
+
+| 方法 | 路径 | 权限 | 说明 |
+|------|------|------|------|
+| GET | `/api/at_worker_status/` | 已登录 | 返回所有已注册 WorkerNode 的实时状态（通过 Celery inspect 动态获取） |
+
+#### 响应字段
+
+| 字段 | 说明 |
+|------|------|
+| `id` | WorkerNode 主键 |
+| `hostname` | Worker 名称 |
+| `ip_address` | IP 地址 |
+| `note` | 备注 |
+| `docker_type` | Docker 类型（如 webotsC1） |
+| `status` | `online`（空闲）/ `busy`（执行中）/ `offline`（离线） |
+| `queues` | 当前监听的队列名列表 |
+| `active_tasks` | 正在执行的任务列表（含 id、name、args） |
+| `reserved_count` | 等待执行的任务数 |
+| `session_total` | 本次 Worker 启动以来完成的任务总数 |
+
+> **实现细节**：分两阶段查询——先 ping 所有节点（3 秒超时），再仅对在线节点查询详细信息（3 秒超时），最大延迟约 6 秒。
 
 ---
 

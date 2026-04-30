@@ -56,7 +56,7 @@
         <el-table-column prop="sim_test_vehicle" label="测试车型" min-width="120" />
         <el-table-column prop="common_parameter_file" label="通参文件" width="90">
           <template #default="{ row }">
-            <a v-if="row.common_parameter_file" :href="row.common_parameter_file" target="_blank"
+            <a v-if="row.common_parameter_file" :href="row.common_parameter_file" download
               class="download-link">下载</a>
             <span v-else>-</span>
           </template>
