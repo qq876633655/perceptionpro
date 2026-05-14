@@ -1,6 +1,7 @@
 import io
 import os
 import shutil
+import uuid as _uuid
 import zipfile
 
 from django.conf import settings
