@@ -217,3 +217,10 @@ backend/demo/*
 backend/dev_perceptionpro/local_settings.py
 backend/dev_perceptionpro/celery_prod.py
 backend/config/perceptionpro_cfg_prod.py
+
+frontend/nginx.conf
+frontend/Dockerfile
+frontend/.dockerignore
+backend/Dockerfile
+backend/.dockerignore
+docker-compose.yml

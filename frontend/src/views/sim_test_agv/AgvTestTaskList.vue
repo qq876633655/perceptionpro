@@ -144,8 +144,13 @@
           <template #default="{ row }">{{ row.created_by_name || '-' }}</template>
         </el-table-column>
         <!-- 无编辑按钮 -->
-        <el-table-column label="操作" width="150" fixed="right">
+        <el-table-column label="操作" width="210" fixed="right">
           <template #default="{ row }">
+            <el-button
+              v-permission="'sim_test_agv.add_agvtesttask'"
+              type="primary" link
+              @click="openCloneDialog(row)"
+            >重发</el-button>
             <el-button
               v-permission="'sim_test_agv.change_agvtesttask'"
               type="warning" link
@@ -171,6 +176,7 @@
     </el-card>
 
     <AgvTestTaskFormDialog v-model:visible="formDialogVisible" @success="fetchData()" />
+    <AgvTestTaskCloneDialog v-model:visible="cloneDialogVisible" :row="cloneRow" @success="fetchData()" />
   </div>
 </template>
 
@@ -181,6 +187,7 @@ import { Search, Refresh, Plus, Delete } from '@element-plus/icons-vue'
 import { getAgvTestTaskList, deleteAgvTestTask, batchDeleteAgvTestTasks, getAgvTestTaskCreators, cancelAgvTestTask, getWorkerStatus } from '@/api/sim_test_agv'
 import { usePagination } from '@/composables/usePagination'
 import AgvTestTaskFormDialog from './AgvTestTaskFormDialog.vue'
+import AgvTestTaskCloneDialog from './AgvTestTaskCloneDialog.vue'
 
 const { loading, tableData, pagination, filters, fetchData, handlePageChange, handleSizeChange, resetAndFetch } =
   usePagination(getAgvTestTaskList)
@@ -275,6 +282,10 @@ function statusTagType(s) { return STATUS_MAP[s]?.type ?? '' }
 
 const formDialogVisible = ref(false)
 function openCreateDialog() { formDialogVisible.value = true }
+
+const cloneDialogVisible = ref(false)
+const cloneRow = ref(null)
+function openCloneDialog(row) { cloneRow.value = row; cloneDialogVisible.value = true }
 
 function formatTime(t) { return t ? t.replace('T', ' ').slice(0, 19) : '-' }
 </script>

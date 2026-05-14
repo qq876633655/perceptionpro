@@ -200,3 +200,119 @@ tail -f /home/user/deploy/perceptionpro/backend/logs/gunicorn_error.log
 tail -f /home/user/deploy/perceptionpro/backend/logs/audit.log
 tail -f /home/user/deploy/perceptionpro/backend/logs/app.log
 ```
+
+---
+
+## Docker 部署
+
+> 将整个平台打包为容器镜像，适合迁移到新机器或做隔离部署。  
+> 外部依赖（MySQL、Redis、NAS）保持不变，不容器化。
+
+### 容器架构
+
+```
+用户浏览器 → :7898 (frontend 容器 Nginx)
+               ├── /           → Vue SPA 静态文件
+               ├── /api/       → proxy → backend:8010 (backend 容器 Gunicorn)
+               ├── /dd/        → proxy → backend:8010
+               ├── /swagger/   → proxy → backend:8010
+               ├── /media/     → 直接由 Nginx serve（挂载 NAS 路径，只读）
+               └── /static/    → 直接由 Nginx serve（挂载 staticfiles，只读）
+
+backend 容器  → MySQL 10.20.24.62:3306
+             → Redis 10.20.24.62:6380
+
+celery-worker 容器 → Redis（消费任务）
+celery-beat 容器   → Redis（定时任务调度）
+```
+
+### 文件清单
+
+| 文件 | 说明 |
+|---|---|
+| `backend/Dockerfile` | 后端镜像（Python 3.12-slim + Gunicorn，端口 8010） |
+| `frontend/Dockerfile` | 前端镜像（多阶段：Node 构建 → Nginx alpine，端口 7898） |
+| `frontend/nginx.conf` | Nginx 配置（反向代理 + 静态文件 serve） |
+| `docker-compose.yml` | 编排 4 个服务：backend / celery-worker / celery-beat / frontend |
+| `backend/.dockerignore` | 排除 media、logs、pyc 等不进镜像的文件 |
+| `frontend/.dockerignore` | 排除 node_modules、dist 等 |
+
+### 前置条件
+
+1. 宿主机已安装 Docker（>=24）和 Docker Compose（>=2.20）
+2. 宿主机已完成 NAS 挂载，并建好软链接：
+   ```bash
+   ln -s <NAS挂载路径> /home/user/deploy/perceptionpro/backend/media
+   ```
+3. 配置文件已就绪（同非容器部署，见"首次生产部署"中的第 2 步）：
+   - `backend/dev_perceptionpro/local_settings.py`
+   - `backend/config/perceptionpro_cfg.py`（生产版本）
+   - `backend/dev_perceptionpro/celery_prod.py`
+
+### 首次部署
+
+```bash
+cd /home/user/workspace/perceptionpro   # 或 deploy 目录
+
+# 1. 构建镜像并启动 web 服务（先不启动 celery）
+docker compose up -d --build backend frontend
+
+# 2. 数据库迁移 + 收集静态文件（只需执行一次）
+docker compose exec backend python manage.py migrate
+docker compose exec backend python manage.py collectstatic --noinput
+
+# 3. 创建超级管理员（如果是新库）
+docker compose exec backend python manage.py createsuperuser
+
+# 4. 确认 web 服务正常后，启动 celery
+docker compose up -d celery-worker celery-beat
+```
+
+### 日常更新
+
+```bash
+cd /home/user/workspace/perceptionpro
+
+# 拉取最新代码
+git pull
+
+# 重新构建并滚动重启（有代码变更时）
+docker compose up -d --build
+
+# 仅有 model/migration 变更时，额外执行
+docker compose exec backend python manage.py migrate
+```
+
+### 常用运维命令
+
+```bash
+# 查看所有容器状态
+docker compose ps
+
+# 查看实时日志
+docker compose logs -f backend
+docker compose logs -f celery-worker
+docker compose logs -f frontend
+
+# 进入容器执行命令
+docker compose exec backend bash
+docker compose exec backend python manage.py shell
+
+# 停止所有服务
+docker compose down
+
+# 停止并删除镜像（重新构建前用）
+docker compose down --rmi local
+
+# 单独重启某个服务
+docker compose restart backend
+docker compose restart frontend
+```
+
+### 注意事项
+
+- **NAS media**：宿主机软链接 `/home/user/deploy/perceptionpro/backend/media` 在 Docker bind mount 时会跟随解析到实际物理路径，容器内可直接访问 NAS 文件，无需额外处理。
+- **仿真测试 Worker**（webotsC1/C2 等）不在这个 compose 里，仍在各测试机器上独立启动，通过 Redis broker 接收任务。
+- **Gunicorn 端口**：容器内监听 `0.0.0.0:8010`，宿主机上暴露 `8010`，供 Nginx 容器通过服务名 `backend:8010` 访问。
+- **collectstatic**：静态文件收集到宿主机 `backend/staticfiles/`，通过 bind mount 挂载给前端容器，由 Nginx 直接 serve，不经过 Python 进程。
+

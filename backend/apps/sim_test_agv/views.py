@@ -534,6 +534,60 @@ class AgvTestTaskViewSet(BaseModelViewSet):
         ids = AgvTestTask.objects.exclude(created_by=None).values_list('created_by', flat=True).distinct()
         return Response(list(User.objects.filter(id__in=ids).values('id', 'username')))
 
+    @action(methods=['post'], detail=True, url_path='clone')
+    def clone(self, request, pk=None):
+        """
+        克隆任务：复制原任务的所有文件到新 uid 目录，可修改文本字段，然后 dispatch。
+        body（均可选）：sim_test_version / queue_name / target_worker / recovery_default_version / base_version
+        """
+        src = self.get_object()
+        new_uid = _uuid.uuid4()
+
+        def _copy_file_field(field_value):
+            """复制文件到新 uid 目录，返回新相对路径；字段为空时返回 None"""
+            if not field_value:
+                return None
+            old_rel = str(field_value)
+            filename = os.path.basename(old_rel)
+            new_rel = f'sim_res_bak/agv_test_task/{new_uid}/{filename}'
+            old_abs = os.path.join(settings.MEDIA_ROOT, old_rel)
+            new_abs = os.path.join(settings.MEDIA_ROOT, new_rel)
+            if not os.path.exists(old_abs):
+                return None  # 原文件已不存在，避免写入悬空路径
+            os.makedirs(os.path.dirname(new_abs), exist_ok=True)
+            shutil.copy2(old_abs, new_abs)
+            return new_rel
+
+        new_task = AgvTestTask(
+            uid=new_uid,
+            sim_test_version=request.data.get('sim_test_version', src.sim_test_version),
+            queue_name=request.data.get('queue_name', src.queue_name),
+            recovery_default_version=request.data.get('recovery_default_version', src.recovery_default_version),
+            base_version=request.data.get('base_version', src.base_version),
+            target_worker=request.data.get('target_worker', src.target_worker) or '',
+            manual_error_handling=src.manual_error_handling,
+            task_status='DISPATCHED',
+            created_by=request.user,
+        )
+
+        # 复制所有文件字段
+        for field_name in ('agv_case_file', 'per_version', 'loc_version', 'ctl_version', 'agv_version'):
+            new_path = _copy_file_field(getattr(src, field_name))
+            if new_path:
+                getattr(new_task, field_name).name = new_path
+
+        new_task.save()
+
+        dispatch_queue = new_task.target_worker if new_task.target_worker else new_task.queue_name
+        celery_task = agv_tasks.agv_sim_test_task.apply_async(
+            args=[new_task.id],
+            queue=dispatch_queue,
+        )
+        new_task.celery_id = celery_task.id
+        new_task.save(update_fields=['celery_id'])
+
+        return Response(AgvTestTaskListSerializer(new_task, context={'request': request}).data, status=201)
+
 
 # ── WorkerNode CRUD ───────────────────────────────────────────────────
 

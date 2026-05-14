@@ -150,6 +150,9 @@ export function batchDeleteAgvTestTasks(ids) {
 export function cancelAgvTestTask(id) {
   return request({ url: `/at_test_task/${id}/cancel/`, method: 'post' })
 }
+export function cloneAgvTestTask(id, data) {
+  return request({ url: `/at_test_task/${id}/clone/`, method: 'post', data })
+}
 export function getAgvTestTaskCreators() {
   return request({ url: '/at_test_task/creators/', method: 'get' })
 }
