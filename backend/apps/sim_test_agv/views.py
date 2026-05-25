@@ -501,12 +501,14 @@ class AgvTestTaskViewSet(BaseModelViewSet):
             instance.save(update_fields=['task_status', 'cancel_requested'])
 
         elif task_status == 'RUNNING':
-            # 任务已在运行，先设标志位让 task 轮询到后自行终止
+            # 设标志位让 task 轮询到后自行终止；同时直接改状态，
+            # 避免断电/Worker 崩溃后轮询永远不执行导致状态卡死
             instance.cancel_requested = True
-            instance.save(update_fields=['cancel_requested'])
+            instance.task_status = 'CANCELED'
+            instance.save(update_fields=['cancel_requested', 'task_status'])
             if instance.celery_id:
                 from dev_perceptionpro.celery import per_celery
-                per_celery.control.revoke(instance.celery_id, terminate=False)
+                per_celery.control.revoke(instance.celery_id, terminate=True)
 
         return Response({'msg': '取消请求已发送'})
 
