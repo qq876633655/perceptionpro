@@ -203,6 +203,42 @@ tail -f /home/user/deploy/perceptionpro/backend/logs/app.log
 
 ---
 
+## 断电 / 重启后恢复步骤
+
+断电后仿真进程会被强制终止，Celery Worker 也会退出。重新开机后需在启动服务前清理残留任务状态，否则前端会显示"执行中"的僵死任务，且无法正常下发新任务。
+
+### 恢复流程
+
+```bash
+cd /home/user/deploy/perceptionpro/backend
+conda activate py312
+
+# 1. 先预览受影响的任务（不做任何实际修改）
+python manage.py cleanup_after_reboot --dry-run
+
+# 2. 确认列表无误后，正式执行（清空 Redis 队列 + 将所有 RUNNING/DISPATCHED/CANCELING 任务标为 CANCELED）
+python manage.py cleanup_after_reboot
+
+# 3. 启动服务
+sudo systemctl start perceptionpro
+# 再启动各仿真机器上的 Celery Worker
+```
+
+### 命令参数说明
+
+| 参数 | 说明 |
+|---|---|
+| （无参数） | 清空 Redis 队列消息 + 将未完成任务标为 CANCELED |
+| `--dry-run` | 仅预览受影响的任务，不做任何修改 |
+| `--no-purge` | 跳过 Redis 队列清理，仅修改 DB 状态（适合 Redis 未断电的场景） |
+
+### 执行完成后
+
+任务状态变为 `CANCELED`，`error_msg` 写入"系统重启后自动取消"。  
+确认仿真环境正常后，在前端对需要重新执行的任务点击**重发**即可。
+
+---
+
 ## Docker 部署
 
 > 将整个平台打包为容器镜像，适合迁移到新机器或做隔离部署。  
