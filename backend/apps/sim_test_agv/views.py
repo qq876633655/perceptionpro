@@ -508,7 +508,9 @@ class AgvTestTaskViewSet(BaseModelViewSet):
             instance.save(update_fields=['cancel_requested', 'task_status'])
             if instance.celery_id:
                 from dev_perceptionpro.celery import per_celery
-                per_celery.control.revoke(instance.celery_id, terminate=True)
+                # terminate=False：只阻止任务重新入队，不杀 Worker pool 进程，
+                # 让 _monitor_process 的轮询机制干净地杀仿真子进程树，避免孤儿进程
+                per_celery.control.revoke(instance.celery_id, terminate=False)
 
         return Response({'msg': '取消请求已发送'})
 
