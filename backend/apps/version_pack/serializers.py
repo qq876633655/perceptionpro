@@ -57,7 +57,7 @@ def make_version_update_serializer(model_cls):
 
 def make_version_list_serializer(model_cls, env_model_cls):
     class _ListSerializer(serializers.ModelSerializer):
-        env_name = serializers.CharField(source='env.env_name', read_only=True)
+        env_name = serializers.CharField(source='env.env_name', read_only=True, allow_null=True, default=None)
         created_by_name = serializers.CharField(source='created_by.username', read_only=True, default='')
         class Meta:
             model = model_cls

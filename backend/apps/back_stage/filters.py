@@ -8,7 +8,8 @@ class UserFilter(django_filters.FilterSet):
     dd_user_id = django_filters.CharFilter(lookup_expr='icontains')
     is_staff = django_filters.BooleanFilter()
     is_active = django_filters.BooleanFilter()
+    groups = django_filters.NumberFilter(field_name='groups__id')
 
     class Meta:
         model = User
-        fields = ['username', 'phone_number', 'dd_user_id', 'is_staff', 'is_active']
+        fields = ['username', 'phone_number', 'dd_user_id', 'is_staff', 'is_active', 'groups']

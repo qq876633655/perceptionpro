@@ -31,6 +31,11 @@
             <el-option label="禁用" :value="false" />
           </el-select>
         </el-form-item>
+        <el-form-item label="角色">
+          <el-select v-model="filters.groups" placeholder="全部" clearable style="width: 130px">
+            <el-option v-for="g in groupOptions" :key="g.id" :label="g.name" :value="g.id" />
+          </el-select>
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" :icon="Search" @click="resetAndFetch(filters)">搜索</el-button>
           <el-button :icon="Refresh" @click="handleReset">重置</el-button>
@@ -157,7 +162,7 @@ fetchData()
 
 function handleReset() {
   Object.assign(filters, {
-    username: '', phone_number: '', is_staff: '', is_active: '',
+    username: '', phone_number: '', is_staff: '', is_active: '', groups: '',
   })
   resetAndFetch({})
 }

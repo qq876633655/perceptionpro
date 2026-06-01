@@ -63,7 +63,7 @@ def per_version_path(instance, filename):
 
 class PerVersion(BaseVersion):
     version_file = models.FileField(verbose_name="版本文件", upload_to=per_version_path, max_length=512)
-    env = models.ForeignKey(PerEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True)
+    env = models.ForeignKey(PerEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True, blank=True)
     database_file = models.FileField(verbose_name="数据库文件", upload_to=per_version_path,
                                      null=True, blank=True, max_length=512, validators=[FileExtensionValidator(['db'])])
 
@@ -84,7 +84,7 @@ def loc_version_path(instance, filename):
 
 class LocVersion(BaseVersion):
     version_file = models.FileField(verbose_name="版本文件", upload_to=loc_version_path, max_length=512)
-    env = models.ForeignKey(LocEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True)
+    env = models.ForeignKey(LocEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True, blank=True)
 
 
 # ════════════════════════════════════════════════════════════════════
@@ -103,7 +103,7 @@ def ctl_version_path(instance, filename):
 
 class CtlVersion(BaseVersion):
     version_file = models.FileField(verbose_name="版本文件", upload_to=ctl_version_path, max_length=512)
-    env = models.ForeignKey(CtlEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True)
+    env = models.ForeignKey(CtlEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True, blank=True)
 
 
 # ════════════════════════════════════════════════════════════════════
@@ -122,7 +122,7 @@ def sim_version_path(instance, filename):
 
 class SimVersion(BaseVersion):
     version_file = models.FileField(verbose_name="版本文件", upload_to=sim_version_path, max_length=512)
-    env = models.ForeignKey(SimEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True)
+    env = models.ForeignKey(SimEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True, blank=True)
 
 
 # ════════════════════════════════════════════════════════════════════
@@ -141,7 +141,7 @@ def sen_version_path(instance, filename):
 
 class SenVersion(BaseVersion):
     version_file = models.FileField(verbose_name="版本文件", upload_to=sen_version_path, max_length=512)
-    env = models.ForeignKey(SenEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True)
+    env = models.ForeignKey(SenEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True, blank=True)
 
 
 # ════════════════════════════════════════════════════════════════════
@@ -160,7 +160,7 @@ def at_version_path(instance, filename):
 
 class AtVersion(BaseVersion):
     version_file = models.FileField(verbose_name="版本文件", upload_to=at_version_path, max_length=512)
-    env = models.ForeignKey(AtEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True)
+    env = models.ForeignKey(AtEnv, verbose_name="适用环境", on_delete=models.SET_NULL, null=True, blank=True)
 
 
 # ════════════════════════════════════════════════════════════════════

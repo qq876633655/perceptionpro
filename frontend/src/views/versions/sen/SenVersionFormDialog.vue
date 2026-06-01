@@ -85,7 +85,7 @@ const rules = {
   ],
   versions_type: [{ required: true, message: '请至少选择一种版本类型', trigger: 'change' }],
   apply_project: [{ required: true, message: '请输入适用专项', trigger: 'blur' }],
-  env: [{ required: true, message: '请选择关联环境', trigger: 'change' }],
+  env: [],
   version_file: [{
     required: true,
     validator: (rule, value, callback) => {
