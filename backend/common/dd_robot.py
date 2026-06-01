@@ -53,48 +53,44 @@ def send_message(payload, webhook):
     return status
 
 
-def _version_release_dd(instance, title, at_mobiles, prod_secret, prod_webhook, is_at_all=False):
+def _notify_dev_users(instance, title):
+    """查询 dev 角色中有 dd_user_id 的用户，通过工作通知推送版本发布消息。"""
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+
+    dev_user_ids = list(
+        User.objects.filter(groups__name='dev', dd_user_id__isnull=False)
+        .exclude(dd_user_id='')
+        .values_list('dd_user_id', flat=True)
+        .distinct()
+    )
+    if not dev_user_ids:
+        return
+
     file_url = f"{ppc.PER_PRO_LOCAL_SERVER_URL}{instance.version_file.url}" if instance.version_file else '-'
     creator = instance.created_by.username if instance.created_by else '-'
-    payload = {
-        "msgtype": "text",
-        "text": {
-            "content": (
-                f"【{title}版本发布】\n"
-                f"版本号：{instance.version_num}\n"
-                f"发版人：{creator}\n"
-                f"版本文件：{file_url}\n"
-                f"研发提测：\n{instance.dev_test_result or '-'}"
-            )
-        },
-        "at": {"atMobiles": at_mobiles, "isAtAll": is_at_all},
+    msg = {
+        'content': (
+            f"【{title}版本发布】\n"
+            f"版本号：{instance.version_num}\n"
+            f"发版人：{creator}\n"
+            f"版本文件：{file_url}\n"
+            f"研发提测：\n{instance.dev_test_result or '-'}"
+        )
     }
-    if ppc.ENV == "dev":
-        webhook = dd_webhook(ppc.TEST_SECRET, ppc.TEST_WEBHOOK)
-    else:
-        webhook = dd_webhook(prod_secret, prod_webhook)
-    return send_message(payload, webhook)
+    dd_h5_robot(dev_user_ids, msg)
 
 
-def per_version_release_dd(instance, is_at_all=False):
-    return _version_release_dd(instance, "感知",
-                               ppc.VERSIONS_AT_MOBILES,
-                               ppc.V4_VERSIONS_SECRET, ppc.V4_VERSIONS_WEBHOOK,
-                               is_at_all)
+def per_version_release_dd(instance, **kwargs):
+    return _notify_dev_users(instance, "感知")
 
 
-def loc_version_release_dd(instance, is_at_all=False):
-    return _version_release_dd(instance, "定位",
-                               ppc.LOC_VERSIONS_AT_MOBILES,
-                               ppc.LOC_VERSIONS_SECRET, ppc.LOC_VERSIONS_WEBHOOK,
-                               is_at_all)
+def loc_version_release_dd(instance, **kwargs):
+    return _notify_dev_users(instance, "定位")
 
 
-def ctl_version_release_dd(instance, is_at_all=False):
-    return _version_release_dd(instance, "控制",
-                               ppc.CTL_VERSIONS_AT_MOBILES,
-                               ppc.CTL_VERSIONS_SECRET, ppc.CTL_VERSIONS_WEBHOOK,
-                               is_at_all)
+def ctl_version_release_dd(instance, **kwargs):
+    return _notify_dev_users(instance, "控制")
 
 
 if __name__ == '__main__':
